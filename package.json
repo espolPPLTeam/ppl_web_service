@@ -1,0 +1,7 @@
+{
+  "name": "ppl_web_service",
+  "version": "1.0.0",
+  "main": "app.js",
+  "author": "Joel Rodriguez <joelerll@gmail.com>",
+  "license": "MIT"
+}
