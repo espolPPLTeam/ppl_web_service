@@ -1,0 +1,115 @@
+[
+  {
+    "nombres": "EDUARDO EFRAIN",
+    "apellidos": "MONTERO CARPIO",
+    "correo": "emontero@espol.edu.ec",
+    "tipo": "titular"
+  },
+  {
+    "nombres": "VICTOR HUGO",
+    "apellidos": "VELASCO GALARZA",
+    "correo": "vhvelasc@espol.edu.ec",
+    "tipo": "titular"
+  },
+  {
+    "nombres": "BOLIVAR CIRILO",
+    "apellidos": "FLORES NICOLALDE",
+    "correo": "bcflores@espol.edu.ec",
+    "tipo": "titular"
+  },
+  {
+    "nombres": "FLORENCIO RAMON",
+    "apellidos": "PINELA CONTRERAS",
+    "correo": "fpinela@espol.edu.ec",
+    "tipo": "titular"
+  },
+  {
+    "nombres": "LUIS",
+    "apellidos": "DEL POZO BARREZUETA",
+    "correo": "lpozo@espol.edu.ec",
+    "tipo": "titular"
+  },
+  {
+    "nombres" : "CARLOS VINICIO",
+    "apellidos" : "MORENO MEDINA",
+    "correo": "cmoreno@espol.edu.ec",
+    "tipo": "titular"
+  },
+  {
+    "nombres" : "JOSE GERARDO",
+    "apellidos" : "SACARELO MELENDEZ",
+    "correo": "jsacarel@espol.edu.ec",
+    "tipo": "titular"
+  },
+  {
+    "nombres" : "JORGE ENRIQUE",
+    "apellidos" : "ROBLERO WONG",
+    "correo": "jroblero@espol.edu.ec",
+    "tipo": "titular"
+  },
+  {
+    "nombres" : "JOSÉ DAVID",
+    "apellidos" : "JIMÉNEZ MIRANDA",
+    "correo": "jodajime@espol.edu.ec",
+    "tipo": "peer"
+  },
+  {
+    "nombres" : "DANIELA DEL ROCIO",
+    "apellidos" : "GUZMAN CADENA",
+    "correo": "ddguzman@espol.edu.ec",
+    "tipo": "peer"
+  },
+  {
+    "nombres" : "ALEX DAVID",
+    "apellidos" : "ROMERO VERA",
+    "correo": "dromero@espol.edu.ec",
+    "tipo": "peer"
+  },
+  {
+    "nombres" : "HORTENCIA ESPERANZA",
+    "apellidos" : "ASANZA SANCHEZ",
+    "correo": "hasanza@espol.edu.ec",
+    "tipo": "peer"
+  },
+  {
+    "nombres" : "LUIS",
+    "apellidos" : "PABON",
+    "correo": "luispabo@espol.edu.ec",
+    "tipo": "peer"
+  },
+  {
+    "nombres" : "JOSE",
+    "apellidos" : "CHIMBO",
+    "correo": "jchimbo@espol.edu.ec",
+    "tipo": "peer"
+  },
+  {
+    "nombres" : "PAUL",
+    "apellidos" : "DAZA",
+    "correo": "pdaza@espol.edu.ec",
+    "tipo": "peer"
+  },
+  {
+    "nombres" : "WILSON",
+    "apellidos" : "NIETO",
+    "correo": "wenieto@espol.edu.ec",
+    "tipo": "peer"
+  },
+  {
+    "nombres" : "LUIS",
+    "apellidos" : "PINOS",
+    "correo": "lapinos@espol.edu.ec",
+    "tipo": "peer"
+  },
+  {
+    "nombres" : "MILTON",
+    "apellidos" : "CUENCA",
+    "correo": "mgcuenca@espol.edu.ec",
+    "tipo": "peer"
+  },
+  {
+    "nombres": "JHOANATAN",
+    "apellidos": "MENDIETA",
+    "correo": "jonedmen@espol.edu.ec"
+  }
+]

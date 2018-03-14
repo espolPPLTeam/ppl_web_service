@@ -1,0 +1,21 @@
+// generate dump files
+// pasar los argumentos
+// conectar client
+// actualizar
+// crear
+// exponer funciones para uso de bases de datos
+
+var argumentosEstudiantes = {
+  anio: '2017', // 2017
+  termino: '2s', // [1s,2s]
+  codigomateria: 'FISG1002', // [FISG1002, FISG1003]
+  paralelo: '1', // [1,2,3 ....]
+}
+
+// var argumentosProfesores = {
+//   anio: ANIO, // 2017
+//   termino: TERMINO, // [1s,2s]
+//   codigomateria: '', // [FISG1002, FISG1003]
+//   paralelo: '', // [1,2,3 ....]
+//   tipo: '' // [0,1] 0 profesor titular, 1 profesor peer
+// }
