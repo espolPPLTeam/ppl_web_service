@@ -1,11 +1,118 @@
-module.exports = ({ url, soap, cheerio, fs, path }) => {
-  const _url_ = url
+module.exports = ({ soap, cheerio, co, fs, path, config, db, _ }) => {
+  const _url_ = config.url
   const _soap_ = soap
   const _cheerio_ = cheerio
   const _fs_ = fs
   const _path_ = path
+  const _config_ = config
+  const _co_ = co
+  const paralelos = []
   const proto = {
+    generarJsonEstudiantesTodos({ }) {
+      const self = this
+      return new Promise((resolve, reject) => {
+        _co_(function *() {
+          const materias = Object.keys(_config_.materiaCodigo).map((k) => _config_.materiaCodigo[k])
+          const terminoActual = _config_.terminoActual()
+          const anioActual = _config_.anioActual
+          let estudiantesTodos  = []
+          for (let i = 0; i < materias.length; i++) {
+            let paralelo = _config_.paraleloDesde
+            let codigomateria = materias[i]
+            while (true) { // buscar por cada paralelo
+              let argumentosEstudiantes = {
+                anio: anioActual,
+                termino: terminoActual,
+                paralelo,
+                codigomateria
+              }
+              let raw =  yield self.obtenerRaw({ argumentos: argumentosEstudiantes, metodo: config.metodos.estudiantes })
+              let estudiantesJson = self.generarJsonEstudiante({ raw })
+              if (!estudiantesJson.length) {
+                break
+              }
+              estudiantesTodos = [...estudiantesTodos, ...estudiantesJson] // anadir estudiantes
+              paralelo++ // aumentar el numero del paralelo
+            }
+          }
+          resolve(estudiantesTodos)
+        }).catch((err) => console.log(err))
+      })
+    }
+    generarJsonEstudiantesTodosDB({ }) {
+
+    },
+    generarJsonEstudiantesTodosMock({ }) {
+    },
+    generarJsonEstudiantesTodosDBMock({ }) {
+    },
+    // tambien tiene que leer datos de un json predeterminado
+    generarJsonProfesoresTodos({ }) {
+      const self = this
+      return new Promise((resolve, reject) => {
+        _co_(function *() {
+          const materias = Object.keys(_config_.materiaCodigo).map((k) => _config_.materiaCodigo[k])
+          const terminoActual = _config_.terminoActual()
+          const anioActual = _config_.anioActual
+          let profesoresTodos  = []
+          for (let i = 0; i < materias.length; i++) {
+            let paralelo = _config_.paraleloDesde
+            let codigomateria = materias[i]
+            let profesoresJson = []
+            while (true) {  // buscar por cada paralelo
+              const tiposProfesores = Object.keys(_config_.tiposProfesor).map((k) => _config_.tiposProfesor[k])
+              for (let j = 0; j < tiposProfesores.length; j++) { // buscar por cada tipo ['peer', 'titular']
+                let tipo = tiposProfesores[j]
+                let argumentosProfesores = {
+                  anio: anioActual,
+                  termino: terminoActual,
+                  paralelo,
+                  codigomateria,
+                  tipo,
+                }
+                let raw =  yield self.obtenerRaw({ argumentos: argumentosProfesores, metodo: config.metodos.profesores })
+                profesoresJson = self.generarJsonProfesor({ raw })
+                let estaVacio = !_.isEmpty(profesoresJson)
+                if (estaVacio) {
+                  profesoresJson['tipo'] = _config_.tipoProfesor({ tipo })
+                  profesoresTodos.push(profesoresJson) // anadir profesores
+                }
+              }
+              if (_.isEmpty(profesoresJson)) {
+                break
+              }
+              paralelo++ // aumentar el numero del paralelo
+            }
+          }
+          resolve(profesoresTodos)
+        })
+      })
+    },
+    generarJsonProfesoresTodosDB({ }) {
+
+    },
+    generarJsonProfesoresTodosDBMock({ }) {
+    },
+    generarJsonProfesoresTodosMock({ }) {
+    },
+    generarJsonParalelosTodos({ }) {
+
+    },
+    generarJsonParalelosTodosMock({ }) {
+
+    },
+    guardarParalelos({}) {
+
+    },
+    guardarProfesores({}) {
+
+    },
+    guardarEstudiantes({ }) {
+
+    },
     obtenerRaw({ argumentos, metodo }) {
+      if ( !argumentos || ! metodo)
+        reject('No envia parametro: argumentos, metodo')
       return new Promise((resolve, reject) => {
         _soap_.createClient(_url_, function(err, client) {
           client[metodo](argumentos, function(err, result, raw) {
@@ -38,6 +145,8 @@ module.exports = ({ url, soap, cheerio, fs, path }) => {
       })
       return estudiantesDatos
     },
+    // si no tiene nada devuelve {}
+    // no anade el tipo
     generarJsonProfesor({ raw }) {
       if ( !raw )
         reject('No envia parametro: raw')
@@ -51,7 +160,7 @@ module.exports = ({ url, soap, cheerio, fs, path }) => {
         codigoMateria: $('CODIGOMATERIA').text().trim(),
         nombreMateria: $('NOMBRE').text().trim()
       }
-      return profesorDatos
+      return profesorDatos['correo'] ? profesorDatos : {}
     },
     anadirTerminoYAnio({ datos, argumentos }) {
       let datosAnadidos = datos.map((obj) => {
@@ -60,9 +169,6 @@ module.exports = ({ url, soap, cheerio, fs, path }) => {
         return obj
       })
       return datosAnadidos
-    },
-    buscarTodos({}) {
-
     },
     saveFile({ tipo, argumentos, raw }) {
       if (tipo === 'estudiante') {
@@ -73,6 +179,17 @@ module.exports = ({ url, soap, cheerio, fs, path }) => {
         return false
       }
       return true
+    },
+
+    // actualizaciones
+    actualizarEstudiantes({ estudiantesWS, estudiantesDB }) {
+
+    },
+    actualizarProfesores({ profesoresWS, profesoresDB }) {
+
+    },
+    actualizarParalelo({ paralelosWS, paralelosDB }) {
+
     }
   }
   return Object.assign(Object.create(proto), {})

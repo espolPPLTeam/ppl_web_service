@@ -19,3 +19,31 @@ var argumentosEstudiantes = {
 //   paralelo: '', // [1,2,3 ....]
 //   tipo: '' // [0,1] 0 profesor titular, 1 profesor peer
 // }
+
+
+// wsPPL.obtenerEstudiantes({ argumentos: argumentosEstudiantes, metodo: metodoEstudiantes })
+//   .then(wsPPL.generarJsonEstudiante)
+//   .then((resp) => {
+//     console.log (resp)
+//   })
+
+// describe('PPL WES SERVICE', () =>  {
+//   it('@t1 OBTENER RAW', (done) => {
+//     done()
+//     // wsPPL.obtenerRaw({ argumentos: argumentosEstudiantes, metodo: metodoEstudiantes }).then((resp) => {
+//     //   console.log(resp)
+//     // })
+//   })
+// })
+
+
+// wsPPL.obtenerRaw({ argumentos: argumentosProfesores, metodo: metodoProfesores }).then((raw) => {
+//   wsPPL.generarJsonEstudiante({ raw: raw.toString() }).then((resp) => {
+//     if (resp.length !== 0) {
+//       let valido = wsPPL.saveFile({ tipo: 'profesor', argumentos: argumentosProfesores, raw })
+//       console.log(valido)
+//     }
+//   })
+// })
+
+// console.log(estudiantesDump.toString())
