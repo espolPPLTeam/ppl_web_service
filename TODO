@@ -1,3 +1,4 @@
+https://stackoverflow.com/questions/43592016/how-do-i-replace-while-loops-with-a-functional-programming-alternative-without-t
 // generate dump files
 // pasar los argumentos
 // conectar client
@@ -47,3 +48,76 @@ var argumentosEstudiantes = {
 // })
 
 // console.log(estudiantesDump.toString())
+
+
+wsPPL.generarJsonEstudiantesTodos({ anio: '2017',termino: '2s' }).then((res) => {
+  console.log(res)
+  // jsonfile.writeFile(`${dumpFolder}/profesores_2017_2s.json`, res, function (err) {
+  // 	console.error(err)
+  // })
+})
+
+  // crear interface base de datos: que parametros envio, que espero recibir. Errors de esto
+  // crear paralelo
+  // crear estudiante
+  // crear profesor
+  // buscar estudiante
+  // buscar profesor
+  // buscar paralelo
+  // anadir estudiante a paralelo
+  // anadir profesor a paralelo
+  // buscar estudiante en paralelo
+  // buscar profesor en paralelo
+
+    it('@t5 PARALELOS JSON', (done) => {
+    let estudiantes = wsPPL.generarJsonEstudiante({ raw: estudiantesDump })
+    done()
+  }),
+  it('@t6 ESTUDIANTES JSON', (done) => {
+    let estudiantes = wsPPL.generarJsonEstudiante({ raw: estudiantesDump })
+    done()
+  }),
+  it('@t7 PROFESORES JSON', (done) => {
+    let estudiantes = wsPPL.generarJsonEstudiante({ raw: estudiantesDump })
+    done()
+  })
+  describe('@t8 DATABASE', () =>  {
+    it('@t8.1 CREAR PARALELOS', (done) => {
+      done()
+    }),
+    it('@t8.2 CREAR ESTUDIANTES Y ANADIR A _____', (done) => {
+      done()
+    }),
+    it('@t8.3 CREAR PROFESORES  Y ANADIR A _____', (done) => {
+      done()
+    })
+  })
+
+
+
+
+para creacion de objeto se tendria en cuenta:
+
+pasar un json
+{
+  anio: //opcional
+  termino: // opcional,
+  cron: { // opcional
+    inicio
+    fin
+    horaCorrer
+    intervalo
+  }
+  db: { // todos son promises y oblitorios, documentar que recibe y que tiene que devolver
+    obtenerEstudiantesDB // 
+    obtenerProfesoresDB //
+    crearEstudiante
+    crearProfesor
+    crearParalelo
+    anadirEstudiantAParalelo
+    anadirProfesorAParalelo
+    eliminarEstudiante
+    cambiarEstudianteParalelo
+  },
+  profesoresJson: // profesor que se quieren anadir y que pueden estar tambie en la base de datos, documentar formato
+}

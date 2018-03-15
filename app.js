@@ -8,18 +8,19 @@ module.exports = ({ soap, cheerio, co, fs, path, config, db, _ }) => {
   const _co_ = co
   const paralelos = []
   const proto = {
-    generarJsonEstudiantesTodos({ }) {
+    generarJsonEstudiantesTodos({ termino, anio }) {
       const self = this
       return new Promise((resolve, reject) => {
         _co_(function *() {
           const materias = Object.keys(_config_.materiaCodigo).map((k) => _config_.materiaCodigo[k])
-          const terminoActual = _config_.terminoActual()
-          const anioActual = _config_.anioActual
+          const terminoActual = termino || _config_.terminoActual()
+          const anioActual = anio || _config_.anioActual
+          let paralelo = _config_.paraleloDesde
+          let exitenEstudiantes = true
           let estudiantesTodos  = []
           for (let i = 0; i < materias.length; i++) {
-            let paralelo = _config_.paraleloDesde
             let codigomateria = materias[i]
-            while (true) { // buscar por cada paralelo
+            do { // pedir los paralelos mientras no esten vacios
               let argumentosEstudiantes = {
                 anio: anioActual,
                 termino: terminoActual,
@@ -28,32 +29,27 @@ module.exports = ({ soap, cheerio, co, fs, path, config, db, _ }) => {
               }
               let raw =  yield self.obtenerRaw({ argumentos: argumentosEstudiantes, metodo: config.metodos.estudiantes })
               let estudiantesJson = self.generarJsonEstudiante({ raw })
-              if (!estudiantesJson.length) {
-                break
-              }
-              estudiantesTodos = [...estudiantesTodos, ...estudiantesJson] // anadir estudiantes
+              exitenEstudiantes = estudiantesJson.length ? true : false
+              if (exitenEstudiantes)
+                estudiantesTodos = [...estudiantesTodos, ...estudiantesJson] // anadir estudiantes
               paralelo++ // aumentar el numero del paralelo
-            }
+            } while (exitenEstudiantes)
           }
           resolve(estudiantesTodos)
         }).catch((err) => console.log(err))
       })
-    }
+    },
     generarJsonEstudiantesTodosDB({ }) {
-
-    },
-    generarJsonEstudiantesTodosMock({ }) {
-    },
-    generarJsonEstudiantesTodosDBMock({ }) {
+      // leer la base de datos y valida que el json entregado sea consitente
     },
     // tambien tiene que leer datos de un json predeterminado
-    generarJsonProfesoresTodos({ }) {
+    generarJsonProfesoresTodos({ termino, anio }) {
       const self = this
       return new Promise((resolve, reject) => {
         _co_(function *() {
           const materias = Object.keys(_config_.materiaCodigo).map((k) => _config_.materiaCodigo[k])
-          const terminoActual = _config_.terminoActual()
-          const anioActual = _config_.anioActual
+          const terminoActual = termino || _config_.terminoActual()
+          const anioActual = anio || _config_.anioActual
           let profesoresTodos  = []
           for (let i = 0; i < materias.length; i++) {
             let paralelo = _config_.paraleloDesde
@@ -71,10 +67,9 @@ module.exports = ({ soap, cheerio, co, fs, path, config, db, _ }) => {
                   tipo,
                 }
                 let raw =  yield self.obtenerRaw({ argumentos: argumentosProfesores, metodo: config.metodos.profesores })
-                profesoresJson = self.generarJsonProfesor({ raw })
+                profesoresJson = self.generarJsonProfesor({ raw, tipo: _config_.tipoProfesor({ tipo }) })
                 let estaVacio = !_.isEmpty(profesoresJson)
                 if (estaVacio) {
-                  profesoresJson['tipo'] = _config_.tipoProfesor({ tipo })
                   profesoresTodos.push(profesoresJson) // anadir profesores
                 }
               }
@@ -91,24 +86,14 @@ module.exports = ({ soap, cheerio, co, fs, path, config, db, _ }) => {
     generarJsonProfesoresTodosDB({ }) {
 
     },
-    generarJsonProfesoresTodosDBMock({ }) {
-    },
-    generarJsonProfesoresTodosMock({ }) {
-    },
-    generarJsonParalelosTodos({ }) {
-
-    },
-    generarJsonParalelosTodosMock({ }) {
-
-    },
-    guardarParalelos({}) {
-
-    },
-    guardarProfesores({}) {
-
-    },
-    guardarEstudiantes({ }) {
-
+    generarJsonParalelosTodos({ estudiantesJson }) {
+      let paralelos = _.uniqBy(estudiantesJson, (e) => {
+        return [e.paralelo, e.codigoMateria].join()
+      });
+      let paralelosLimpiados = paralelos.map(function(paralelo) {
+        return (({ codigoMateria, nombreMateria, paralelo }) => ({ codigoMateria, nombreMateria, paralelo }))(paralelo)
+      }, [])
+      return paralelosLimpiados
     },
     obtenerRaw({ argumentos, metodo }) {
       if ( !argumentos || ! metodo)
@@ -147,7 +132,7 @@ module.exports = ({ soap, cheerio, co, fs, path, config, db, _ }) => {
     },
     // si no tiene nada devuelve {}
     // no anade el tipo
-    generarJsonProfesor({ raw }) {
+    generarJsonProfesor({ raw, tipo }) {
       if ( !raw )
         reject('No envia parametro: raw')
       let $ = _cheerio_.load(raw)
@@ -155,6 +140,7 @@ module.exports = ({ soap, cheerio, co, fs, path, config, db, _ }) => {
         nombres: $('NOMBRES').text().trim(),
         apellidos: $('APELLIDOS').text().trim(),
         correo: $('EMAIL').text().trim(),
+        tipo,
         // datos paralelo
         paralelo: $('PARALELO').text().trim(),
         codigoMateria: $('CODIGOMATERIA').text().trim(),
@@ -180,7 +166,44 @@ module.exports = ({ soap, cheerio, co, fs, path, config, db, _ }) => {
       }
       return true
     },
+    guardarParalelos({ paralelosJson }) {
+      const cantidaParalelos = paralelosJson.length
+      return new Promise((resolve, reject) => {
+        co(function *() {
+          for (var i = 0; i < cantidaParalelos ; i++) {
+            let { codigoMateria, nombreMateria, paralelo } = paralelosJson[i]
+            let estado = yield db.crearParalelo({ codigoMateria, nombreMateria, paralelo })
+            if (!estado) {
+              // logger de errores
+            }
+          }
+          resolve(true)
+        }).catch((err) => {
+          reject(err)
+        })
+      })
+    },
+    guardarProfesores({ profesoresJson }) {
+      const cantidaProfesores = profesoresJson.length
+      return new Promise((resolve, reject) => {
+        co(function *() {
+          for (var i = 0; i < cantidaProfesores ; i++) {
+            let { nombres, apellidos, correo, tipo, paralelo, codigoMateria } = profesoresJson[i]
+            let estado = yield db.crearParalelo({ nombres, apellidos, correo, tipo })
+            let estadoParalelo = yield db.anadirProfesorAParalelo({ paralelo: { curso: paralelo, codigo: codigoMateria }, profesorCorreo: correo })
+            if (!estado || !estadoParalelo) {
+              // logger de errores
+            }
+          }
+          resolve(true)
+        }).catch((err) => {
+          reject(err)
+        })
+      })
+    },
+    guardarEstudiantes({ estudiantesJson }) {
 
+    },
     // actualizaciones
     actualizarEstudiantes({ estudiantesWS, estudiantesDB }) {
 

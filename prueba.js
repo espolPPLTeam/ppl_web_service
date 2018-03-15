@@ -24,4 +24,6 @@
 
 // console.log(materias)
 
-dat
+if (0) {
+	console.log('aaa')
+}

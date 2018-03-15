@@ -3,7 +3,9 @@
     "nombres": "EDUARDO EFRAIN",
     "apellidos": "MONTERO CARPIO",
     "correo": "emontero@espol.edu.ec",
-    "tipo": "titular"
+    "tipo": "titular",
+    "paralelo":"1",
+    "codigoMateria":"FISG1002"
   },
   {
     "nombres": "VICTOR HUGO",
