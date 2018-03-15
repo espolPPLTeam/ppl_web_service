@@ -10,6 +10,7 @@ const _ = require('lodash')
 const jsonfile = require('jsonfile')
 const chaiXml = require('chai-xml')
 const Ajv = require('ajv')
+const logger = require('tracer').console()
 const ajv = new Ajv({$data: true})
 const jsondiffpatch = require('jsondiffpatch').create({
   arrays: {
@@ -44,38 +45,25 @@ const dbMock = {
   	eliminarEstudiante({ estudianteIdentificador }) { // tiene que moverse de paralelo y vera que hace el que la implementa
       return Promise.resolve(true)
   	},
-  	cambiarEstudianteParalelo({ paraleloNuevo: { cursoNuevo, codigoNuevo }, paraleloAntiguo: { cursoAntiguo, codigoAntiguo }, estudianteIdentificador }) {
+  	cambiarEstudianteParalelo({ paraleloNuevo ,estudianteIdentificador }) {
       return Promise.resolve(true)
   	},
-    estudiantesDB({}) {
-
+    cambiarNombresEstudiante({ nombresNuevo, estudianteIdentificador}) {
+      return Promise.resolve(true)
     },
-    profesoresDB({}) {
-
+    cambiarApellidosEstudiante({ nombresNuevo, estudianteIdentificador}) {
+      return Promise.resolve(true)
     },
-    paralelosDB({}) {
-
+    cambiarCorreoEstudiante({ correoNuevo, estudianteIdentificador}) {
+      return Promise.resolve(true)
     },
-  	// extras, para comprobacion de datos
-  	buscarEstudiante({}) {
-
-  	},
-  	buscarProfesor({}) {
-
-  	},
-  	buscarParalelo({}) {
-
-  	},
-  	buscarEstudianteEnParalelo({}) {
-
-  	},
-  	buscarProfesorEnParalelo({}) {
-
-  	}
+    paralelos({}) {
+      return Promise.resolve(dump.paralelos[0])
+    }
 }
 
 const db = dbMock
-const wsPPL = WSPPL({ soap, cheerio, fs,  path, co, _, config, db, jsondiffpatch })
+const wsPPL = WSPPL({ soap, cheerio, fs,  path, co, _, config, db, jsondiffpatch, logger })
 // expect(ajv.validate(schema.PROFESOR_DATOS, res.body.datos)).to.equal(true)
 describe('PPL WEB SERVICE', () =>  {
   before(function(done) {
@@ -207,7 +195,11 @@ describe('PPL WEB SERVICE', () =>  {
       it('@t7.4.1 ESTUDIANTE CAMBIO PARALELO', (done) => {
         let estudiantesJsonWS = dump.estudiantesJson[0]
         let estudiantesJsonDB = JSON.parse(JSON.stringify(estudiantesJsonWS))
+        // estudiantesJsonWS.splice(1,1)
         estudiantesJsonWS[0]['paralelo'] = '2'
+        estudiantesJsonWS[0]['correo'] = 'joelerll@gmail.com'
+        estudiantesJsonWS[1]['paralelo'] = '3'
+        estudiantesJsonWS[3]['nombres'] = 'Joel'
         wsPPL.actualizarEstudiantes({ estudiantesWS: estudiantesJsonWS, estudiantesDB: estudiantesJsonDB }).then((resp) => {
           expect(resp).to.be.true
           done()

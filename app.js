@@ -1,29 +1,30 @@
-module.exports = ({ soap, cheerio, co, fs, path, config, db, _, jsondiffpatch }) => {
-  const _url_ = config.url
-  const _soap_ = soap
-  const _cheerio_ = cheerio
-  const _fs_ = fs
-  const _path_ = path
-  const _config_ = config
-  const _co_ = co
-  const paralelos = []
+module.exports = ({ soap, cheerio, co, fs, path, config, db, _, jsondiffpatch, logger }) => {
+  const URL = config.url
+  const MATERIAS = Object.keys(config.materiaCodigo).map((k) => config.materiaCodigo[k])
   const proto = {
+    /**
+      * @promise
+      * Devuelve todos los estudiantes de todos los paralelos.
+      * @param {string} termino - puede ser 1s o 2s
+      * @param {string} anio
+      * @resolve {array}
+    */
     generarJsonEstudiantesTodos({ termino, anio }) {
       const self = this
-      const materias = Object.keys(_config_.materiaCodigo).map((k) => _config_.materiaCodigo[k])
-      const terminoActual = termino || _config_.terminoActual()
-      const anioActual = anio || _config_.anioActual
+      const TERMINO_ACTUAL = termino || config.terminoActual()
+      const ANIO_ACTUAL = anio || config.anioActual
       return new Promise((resolve, reject) => {
-        _co_(function *() {
-          let paralelo = _config_.paraleloDesde
+        co(function *() {
           let exitenEstudiantes = true
           let estudiantesTodos  = []
-          for (let i = 0; i < materias.length; i++) {
-            let codigomateria = materias[i]
+          let cantidadMaterias = MATERIAS.length
+          for (let i = 0; i < cantidadMaterias; i++) { // buscar por cada materia existente
+            let paralelo = config.paraleloDesde
+            let codigomateria = MATERIAS[i]
             do { // pedir los paralelos mientras no esten vacios
               let argumentosEstudiantes = {
-                anio: anioActual,
-                termino: terminoActual,
+                anio: ANIO_ACTUAL,
+                termino: TERMINO_ACTUAL,
                 paralelo,
                 codigomateria
               }
@@ -31,42 +32,50 @@ module.exports = ({ soap, cheerio, co, fs, path, config, db, _, jsondiffpatch })
               let estudiantesJson = self.generarJsonEstudiante({ raw })
               exitenEstudiantes = estudiantesJson.length ? true : false
               if (exitenEstudiantes) {
-                estudiantesTodos = [...estudiantesTodos, ...estudiantesJson] // anadir estudiantes
+                estudiantesTodos = [...estudiantesTodos, ...estudiantesJson]
               }
-              paralelo++ // aumentar el numero del paralelo
+              paralelo++
             } while (exitenEstudiantes)
-            paralelo = 1
           }
           resolve(estudiantesTodos)
-        }).catch((err) => console.log(err))
+        }).catch((err) => {
+          logger.error('generarJsonEstudiantesTodos', err)
+          reject(err)
+        })
       })
     },
+    /**
+      * @promise
+      * Devuelve todos los profesores de todos los paralelos.
+      * @param {string} termino - puede ser 1s o 2s
+      * @param {string} anio
+      * @returns {array}
+    */
     generarJsonProfesoresTodos({ termino, anio }) {
-      // tambien tiene que leer datos de un json predeterminado
+      // TODO: cambiarlo a do while
       const self = this
+      const TERMINO_ACTUAL = termino || config.terminoActual()
+      const ANIO_ACTUAL = anio || config.anioActual
       return new Promise((resolve, reject) => {
-        _co_(function *() {
-          const materias = Object.keys(_config_.materiaCodigo).map((k) => _config_.materiaCodigo[k])
-          const terminoActual = termino || _config_.terminoActual()
-          const anioActual = anio || _config_.anioActual
+        co(function *() {
           let profesoresTodos  = []
-          for (let i = 0; i < materias.length; i++) {
-            let paralelo = _config_.paraleloDesde
-            let codigomateria = materias[i]
+          for (let i = 0; i < MATERIAS.length; i++) { // por cada materia
+            let paralelo = config.paraleloDesde
+            let codigomateria = MATERIAS[i]
             let profesoresJson = []
             while (true) {  // buscar por cada paralelo
-              const tiposProfesores = Object.keys(_config_.tiposProfesor).map((k) => _config_.tiposProfesor[k])
+              const tiposProfesores = Object.keys(config.tiposProfesor).map((k) => config.tiposProfesor[k])
               for (let j = 0; j < tiposProfesores.length; j++) { // buscar por cada tipo ['peer', 'titular']
                 let tipo = tiposProfesores[j]
                 let argumentosProfesores = {
-                  anio: anioActual,
-                  termino: terminoActual,
+                  anio: ANIO_ACTUAL,
+                  termino: TERMINO_ACTUAL,
                   paralelo,
                   codigomateria,
                   tipo,
                 }
                 let raw =  yield self.obtenerRaw({ argumentos: argumentosProfesores, metodo: config.metodos.profesores })
-                profesoresJson = self.generarJsonProfesor({ raw, tipo: _config_.tipoProfesor({ tipo }) })
+                profesoresJson = self.generarJsonProfesor({ raw, tipo: config.tipoProfesor({ tipo }) })
                 let estaVacio = !_.isEmpty(profesoresJson)
                 if (estaVacio) {
                   profesoresTodos.push(profesoresJson) // anadir profesores
@@ -82,11 +91,21 @@ module.exports = ({ soap, cheerio, co, fs, path, config, db, _, jsondiffpatch })
         })
       })
     },
+    /**
+      * @promise
+      * Devuelve el xml del lo que se pida de la webService.
+      * Es usada tanto en estudiantes, peers o profesores
+      * @param { json } argumentos - dependiento que cual sea el metodo, debe pasarse los argumentos.
+      *                              ver el archivo json.schema.js
+      * @param { string } metodo - ver el archivo config.js para los metodos disponibles
+      * @resolve { string }  
+      * @reject { error }  
+    */
     obtenerRaw({ argumentos, metodo }) {
       if ( !argumentos || ! metodo)
         reject('No envia parametro: argumentos, metodo')
       return new Promise((resolve, reject) => {
-        _soap_.createClient(_url_, function(err, client) {
+        soap.createClient(URL, function(err, client) {
           client[metodo](argumentos, function(err, result, raw) {
             if (err) reject(err)
             resolve(raw)
@@ -94,6 +113,11 @@ module.exports = ({ soap, cheerio, co, fs, path, config, db, _, jsondiffpatch })
         })
       })
     },
+    /**
+      * Genera los paralelos existentes
+      * @param { array } estudiantesJson - Los estudiantes siguiendo el formato de json.schema.js
+      * @returns { array }  
+    */
     generarJsonParalelosTodos({ estudiantesJson }) {
       let paralelos = _.uniqBy(estudiantesJson, (e) => {
         return [e.paralelo, e.codigoMateria].join()
@@ -103,16 +127,19 @@ module.exports = ({ soap, cheerio, co, fs, path, config, db, _, jsondiffpatch })
       }, [])
       return paralelosLimpiados
     },
+    /**
+      * Genera los estudiantes con las propiedades segun el archivo json.schema.js
+      * @param { string } raw - xml pedido de la web service
+      * @returns { array } - [estudiantes]
+      * @returns { array } - [] Vacio si no hay datos
+    */
     generarJsonEstudiante({ raw }) {
-      // devuelve array vacio si ya no hay datos
-      // errores: comprobar que todos generen el json con todos los datos, si no escibir en un logger
-      //          compronar que todos tengan correo espol
       if ( !raw )
         reject('No envia parametro: raw')
       let estudiantesDatos = []
-      let load = _cheerio_.load(raw)
-      load('Estudiantes').each(function(index, elem) {
-        let $ = _cheerio_.load(load.html(load(this)))
+      let load = cheerio.load(raw)
+      load('Estudiantes').each(function(index, elem) { // recorrer cada estudiante
+        let $ = cheerio.load(load.html(load(this)))
         estudiantesDatos.push(estudiante = {
           nombres: $('NOMBRES').text().trim(),
           apellidos: $('APELLIDOS').text().trim(),
@@ -126,11 +153,17 @@ module.exports = ({ soap, cheerio, co, fs, path, config, db, _, jsondiffpatch })
       })
       return estudiantesDatos
     },
+    /**
+      * Genera el profesor con las propiedades segun el archivo json.schema.js
+      * @param { string } raw - xml pedido de la web service
+      * @param { string } tipo - ver el archivo de config.js
+      * @returns { json } - {profesor}
+      * @returns { json } - {} Vacio si no hay datos
+    */
     generarJsonProfesor({ raw, tipo }) {
-      // si no tiene nada devuelve {}
       if ( !raw )
         reject('No envia parametro: raw')
-      let $ = _cheerio_.load(raw)
+      let $ = cheerio.load(raw)
       let profesorDatos = {
         nombres: $('NOMBRES').text().trim(),
         apellidos: $('APELLIDOS').text().trim(),
@@ -143,14 +176,13 @@ module.exports = ({ soap, cheerio, co, fs, path, config, db, _, jsondiffpatch })
       }
       return profesorDatos['correo'] ? profesorDatos : {}
     },
-    anadirTerminoYAnio({ termino, anio, json }) {
-      let datosAnadidos = json.map((obj) => {
-        obj.termino = termino
-        obj.anio = anio
-        return obj
-      })
-      return datosAnadidos
-    },
+    /**
+      * @Promise
+      * Guarda en la base de datos
+      * @param { array } paralelosJson - paralelos segun el esquema json.schema.js
+      * @resolve { boolen } - true
+      * @reject { err }
+    */
     guardarParalelos({ paralelosJson }) {
       const cantidaParalelos = paralelosJson.length
       return new Promise((resolve, reject) => {
@@ -159,15 +191,23 @@ module.exports = ({ soap, cheerio, co, fs, path, config, db, _, jsondiffpatch })
             let { codigoMateria, nombreMateria, paralelo, termino, anio } = paralelosJson[i]
             let estado = yield db.crearParalelo({ codigoMateria, nombreMateria, paralelo, termino, anio })
             if (!estado) {
-              // logger de errores
+              logger.error('guardarParalelos', paralelosJson[i])
             }
           }
           resolve(true)
         }).catch((err) => {
+          logger.error('guardarParalelos', err)
           reject(err)
         })
       })
     },
+    /**
+      * @Promise
+      * Guarda en la base de datos
+      * @param { array } profesoresJson - profesores segun el esquema json.schema.js
+      * @resolve { boolean } - true
+      * @reject { error }
+    */
     guardarProfesores({ profesoresJson }) {
       const cantidaProfesores = profesoresJson.length
       return new Promise((resolve, reject) => {
@@ -177,15 +217,23 @@ module.exports = ({ soap, cheerio, co, fs, path, config, db, _, jsondiffpatch })
             let estado = yield db.crearProfesor({ nombres, apellidos, correo, tipo })
             let estadoParalelo = yield db.anadirProfesorAParalelo({ paralelo: { curso: paralelo, codigo: codigoMateria }, profesorIdentificador: correo })
             if (!estado || !estadoParalelo) {
-              // logger de errores
+              logger.error('guardarProfesores', profesoresJson[i])
             }
           }
           resolve(true)
         }).catch((err) => {
+          logger.error('guardarProfesores', err)
           reject(err)
         })
       })
     },
+    /**
+      * @Promise
+      * Guarda en la base de datos
+      * @param { array } estudiantesJson - estudiantes segun el esquema json.schema.js
+      * @returns { boolean } - true
+      * @reject { error }
+    */
     guardarEstudiantes({ estudiantesJson }) {
       const cantidadEstudiantes = estudiantesJson.length
       return new Promise((resolve, reject) => {
@@ -195,17 +243,28 @@ module.exports = ({ soap, cheerio, co, fs, path, config, db, _, jsondiffpatch })
             let estado = yield db.crearEstudiante({ nombres, apellidos, correo, matricula })
             let estadoParalelo = yield db.anadirEstudiantAParalelo({ paralelo: { curso: paralelo, codigo: codigoMateria }, estudianteIdentificador: correo })
             if (!estado || !estadoParalelo) {
-              // logger de errores
+              logger.error('guardarEstudiantes', estudiantesJson[i])
             }
           }
           resolve(true)
         }).catch((err) => {
+          logger.error('guardarEstudiantes', err)
           reject(err)
         })
       })
     },
 
     // actualizaciones
+    /**
+      * @Promise
+      * @param { array } estudiantesWS - estudiantes leidos de la webService
+      * @param { array } estudiantesDB - estudiantes leidos de la db
+      * @nota Revisar bien el archivo json.schema.js para ver el formato que debe serguir
+      * @resolve { boolean } - true  si se tienen datos que actualizar
+      * @resolve { boolean } - false si no hay nada que actualizar
+      * @reject { err }
+      * TODO: json no valido de cada entrada
+    */
     actualizarEstudiantes({ estudiantesWS, estudiantesDB }) {
       const self = this
       return new Promise((resolve, reject) => {
@@ -223,45 +282,38 @@ module.exports = ({ soap, cheerio, co, fs, path, config, db, _, jsondiffpatch })
           const hayEstudiantesNuevos = !_.isEmpty(estudiantesNuevosWS)
           co(function *() {
             if (hayEstudiantesEditados) { // cambiado paralelo, cambiado datos estudiante
-              const estudiantesDBEditados = estudiantesDB.filter(est => {
-                for (let i = 0; i < estudiantesEditados.length; i++) {
-                  if (self.estudiantesIguales(estudiantesEditados[i], est)) {
-                    return estudiantesEditados[i]
-                  }
-                }
-              })
-              const estudiantesWSEditados = estudiantesWS.filter(est => {
-                for (let i = 0; i < estudiantesEditados.length; i++) {
-                  if (self.estudiantesIguales(estudiantesEditados[i], est)) {
-                    return estudiantesEditados[i]
-                  }
-                }
-              })
+              const estudiantesDBEditados = _.intersectionBy(estudiantesDB, estudiantesEditados, 'matricula')
+              const estudiantesWSEditados = _.intersectionBy(estudiantesWS, estudiantesEditados, 'matricula')
               const diferencias = jsondiffpatch.diff(estudiantesDBEditados, estudiantesWSEditados)
-              console.log(estudiantesEditados)
-              console.log(diferencias)
               if (diferencias)
-                yield actualizarEstudiantesEditados({ diferencias, estudiantesEditados })
+                yield self.actualizarEstudiantesEditados({ diferencias, estudiantesEditados })
             }
             if (hayEstudiantesEliminados) {
+              logger.info('estudiantes eliminados', estudiantesEliminadosDB)
               yield self.actualizarEstudiantesRetirados({ estudiantesEliminadosDB })
             }
             if (hayEstudiantesNuevos) {
+              logger.info('estudiantes nuevos', estudiantesNuevosWS)
               yield self.actualizarEstudiantesAnadidos({ estudiantesNuevosWS })
             }
             resolve(true)
           }).catch((err) => {
-            console.error(err)
-            // TODO: logger error
+            logger.error('actualizarEstudiantes',err)
+            reject(err)
           })
         } else {
-          // TODO: logger
-          reject(false)
+          resolve(false)
         }
       })
     },
+    /**
+      * @Promise
+      * @param { array } estudiantesEliminadosDB
+      * @returns { }
+      * @reject { error }
+    */
     actualizarEstudiantesRetirados({ estudiantesEliminadosDB }) {
-      return new Promise((resolve) => {
+      return new Promise((resolve, reject) => {
         co(function *() {
           let cantidadEstudiantesEliminados = estudiantesEliminadosDB.length
           for (let i = 0; i < cantidadEstudiantesEliminados; i++) {
@@ -269,19 +321,24 @@ module.exports = ({ soap, cheerio, co, fs, path, config, db, _, jsondiffpatch })
             let estudianteIdentificador = estudiante['matricula']
             let fueHecho = yield db.eliminarEstudiante({ estudianteIdentificador })
             if (!fueHecho) {
-              // TODO: logger error
-              console.error(new Error('Error en eliminar'))
+              logger.error('actualizarEstudiantesRetirados',estudiante)
             }
           }
           resolve(true)
         }).catch((err) => {
-          console.error(err)
-          // TODO: logger error
+          logger.error('actualizarEstudiantesRetirados',err)
+          reject(err)
         })
       })
     },
+    /**
+      * @Promise
+      * @param { array } estudiantesNuevosWS
+      * @returns { }
+      * @reject { error }
+    */
     actualizarEstudiantesAnadidos({ estudiantesNuevosWS }) {
-      return new Promise((resolve) => {
+      return new Promise((resolve, reject) => {
         co(function *() {
           let cantidadEstudiantesNuevos = estudiantesNuevosWS.length
           for (let i = 0; i < cantidadEstudiantesNuevos; i++) {
@@ -292,124 +349,201 @@ module.exports = ({ soap, cheerio, co, fs, path, config, db, _, jsondiffpatch })
             let { paralelo, codigoMateria } = estudiante
             let fueAnadidoAParalelo = yield db.anadirEstudiantAParalelo({ paralelo: { curso: paralelo, codigo: codigoMateria }, estudianteIdentificador: correo })
             if (!fueCreado || !fueAnadidoAParalelo) {
-              // TODO: logger error
-              console.error(new Error('Error en crear'))
+              logger.error('actualizarEstudiantesAnadidos',estudiante)
             }
           }
           resolve(true)
         }).catch((err) => {
-          console.error(err)
-          // TODO: logger error
+          logger.error('actualizarEstudiantesAnadidos',err)
+          reject(err)
         })
       })
     },
+    /**
+      * @Promise
+      * @param { json } diferencias - ver la libreria jsondiffpatch para major detalle
+      * @param { array } estudiantesEditados
+      * @resolve { }
+      * @reject { error }
+    */
     actualizarEstudiantesEditados({ diferencias, estudiantesEditados }) {
+      const self = this
       return new Promise((resolve, reject) => {
-        var indexes = Object.keys(diferencias)
-        var estudiantes_cambiados_paralelo = []
-        var estudiantes_cambiados_correo = []
-        var estudiantes_cambiados_nombres = []
-        var estudiantes_cambiados_apellidos = []
-        for (var i = 0; i < (indexes.length - 1); i++) {
-          let estudiante_camb = estudiantesDB[indexes[i]]
-          if (diferencias[indexes[i]].paralelo) {
-            estudiante_camb.paralelo_nuevo = diferencias[indexes[i]].paralelo[1]
-            estudiantes_cambiados_paralelo.push(estudiante_camb)
+        const estudiantesConCambios = Object.keys(diferencias)
+        const cantidadEstudiantesCambiados = estudiantesConCambios.length - 1 // porque al libreria al ultimo genera un dato de informacion no util por el momento
+        let estudiantesCambiadoParalelo = []
+        let estudiantesCambiadoCorreo = []
+        let estudiantesCambiadosNombres = []
+        let estudiantesCambiadosApellidos = []
+        for (let i = 0; i < cantidadEstudiantesCambiados; i++) {
+          let estudiante =  estudiantesEditados[estudiantesConCambios[i]]
+          let seCambioParalelo = diferencias[estudiantesConCambios[i]].paralelo
+          let seCambioCorreo = diferencias[estudiantesConCambios[i]].correo
+          let seCambioNombres = diferencias[estudiantesConCambios[i]].nombres
+          let seCambioApellidos = diferencias[estudiantesConCambios[i]].apellidos
+          if (seCambioParalelo) {
+            let paraleloNuevo =  diferencias[estudiantesConCambios[i]].paralelo[1]
+            let estudianteAnadir = JSON.parse(JSON.stringify(estudiante))
+            estudianteAnadir['paraleloNuevo'] = paraleloNuevo
+            estudiantesCambiadoParalelo.push(estudianteAnadir)
           }
-          if (diferencias[indexes[i]].correo) {
-            estudiante_camb.correo_nuevo = diferencias[indexes[i]].correo[1]
-            estudiantes_cambiados_correo.push(estudiante_camb)
+          if (seCambioCorreo) {
+            let correoNuevo =  diferencias[estudiantesConCambios[i]].correo[1]
+            let estudianteAnadir = JSON.parse(JSON.stringify(estudiante))
+            estudianteAnadir['correoNuevo'] = correoNuevo
+            estudiantesCambiadoCorreo.push(estudianteAnadir)
           }
-          if (diferencias[indexes[i]].nombres) {
-            estudiante_camb.nombres_nuevo = diferencias[indexes[i]].nombres[1]
-            estudiantes_cambiados_nombres.push(estudiante_camb)
+          if (seCambioNombres) {
+            let nombresNuevo =  diferencias[estudiantesConCambios[i]].nombres[1]
+            let estudianteAnadir = JSON.parse(JSON.stringify(estudiante))
+            estudianteAnadir['nombresNuevo'] = nombresNuevo
+            estudiantesCambiadosNombres.push(estudianteAnadir)
           }
-          if (diferencias[indexes[i]].apellidos) {
-            estudiante_camb.apellidos_nuevo = diferencias[indexes[i]].apellidos[1]
-            estudiantes_cambiados_apellidos.push(estudiante_camb)
+          if (seCambioApellidos) {
+            let apellidosNuevo =  diferencias[estudiantesConCambios[i]].apellidos[1]
+            let estudianteAnadir = JSON.parse(JSON.stringify(estudiante))
+            estudianteAnadir['apellidosNuevo'] = apellidosNuevo
+            estudiantesCambiadoCorreo.push(estudianteAnadir)
           }
         }
-        logger.log('cambiado paralelo',estudiantes_cambiados_paralelo.length)
-        logger.log('cambiado apellidos', estudiantes_cambiados_apellidos.length)
-        logger.log('cambiando nombres', estudiantes_cambiados_nombres.length)
-        logger.log('cambiando correo', estudiantes_cambiados_correo.length)
+        logger.info('estudiantes cambiado paralelo',estudiantesCambiadoParalelo)
+        logger.info('estudiantes cambiado correo', estudiantesCambiadoCorreo)
+        logger.info('estudiantes cambiado nombres',estudiantesCambiadosNombres)
+        logger.info('estudiantes cambiado apellidos', estudiantesCambiadosApellidos)
         co(function* () {
-          var paralelos = yield obtenerTodosParalelos()
-          // paralelo
-          for (var i = 0; i < estudiantes_cambiados_paralelo.length; i++) {
-            var est = estudiantes_cambiados_paralelo[i]
-            var estudiante = yield obtenerEstudiantePorMatricula(est.matricula)
-            var paralelo = encontrarParalelo(est.paralelo, est.codigomateria, est.anio, est.termino, paralelos)
-            var paralelo_nuevo = encontrarParalelo(est.paralelo_nuevo, est.codigomateria, est.anio, est.termino, paralelos)
-            var logrado = yield cambiarEstudianteDeParalelo(paralelo._id, paralelo_nuevo._id, estudiante._id)
-            var eliminado_grupo = yield eliminarEstudianteDeGrupos(estudiante._id)
-            if (!logrado) {
-              logger.error('no se pudo cambiar estado estudiante')
-              return reject(false)
-            }
-          }
-          // correo
-          for (var i = 0; i < estudiantes_cambiados_correo.length; i++) {
-            var est = estudiantes_cambiados_correo[i]
-            // var estudiante = yield obtenerEstudiantePorMatricula(est.matricula)
-            var match_correo = yield editarCorreo(est.matricula, est.correo_nuevo)
-            if (!match_correo) {
-              logger.error('no se pudo cambiar correo estudiante')
-              return reject(false)
-            }
-          }
-          // nombres
-          for (var i = 0; i < estudiantes_cambiados_nombres.length; i++) {
-            var est = estudiantes_cambiados_nombres[i]
-            // var estudiante = yield obtenerEstudiantePorMatricula(est.matricula)
-            var match_nombres = yield editarNombres(est.matricula, est.nombres_nuevo)
-            if (!match_nombres) {
-              logger.error('no se pudo cambiar correo estudiante')
-              return reject(false)
-            }
-          }
-          // apellidos
-          for (var i = 0; i < estudiantes_cambiados_apellidos.length; i++) {
-            var est = estudiantes_cambiados_apellidos[i]
-            // var estudiante = yield obtenerEstudiantePorMatricula(est.matricula)
-            var match_apellidos = yield editarApellidos(est.matricula, est.apellidos_nuevo)
-            if (!match_apellidos) {
-              logger.error('no se pudo cambiar correo estudiante')
-              return reject(false)
-            }
-          }
-          return resolve(true)
-        }).catch(fail => console.log(fail))
+          const paralelos = yield db.paralelos({})
+          yield self.actualizarEstudiantesCambiadosParalelo({ estudiantesCambiadoParalelo })
+          yield self.actualizarEstudiantesCambiadoCorreo({ estudiantesCambiadoCorreo })
+          yield self.actualizarEstudiantesCambiadoNombres({ estudiantesCambiadosNombres })
+          yield self.actualizarEstudiantesCambiadoApellidos({ estudiantesCambiadosApellidos })
+          resolve(true)
+        }).catch((err) => {
+          logger.error('actualizarEstudiantesEditados',err)
+          reject(err)
+        })
       })
     },
-    actualizarEstudiantesCambiadosCurso({}) {
-
+    /**
+      * @Promise
+      * @param { array } estudiantesCambiadoParalelo
+      * @resolve { }
+      * @reject { error }
+    */
+    actualizarEstudiantesCambiadosParalelo({ estudiantesCambiadoParalelo }) {
+      return new Promise((resolve, reject) => {
+        co(function* () {
+          let cantidadEstudiantes = estudiantesCambiadoParalelo.length
+          for (let i = 0; i < cantidadEstudiantes; i++) {
+            let estudiante = estudiantesCambiadoParalelo[i]
+            let estudianteIdentificador = estudiante['matricula']
+            let paraleloNuevo = estudiante['paraleloNuevo']
+            let seCambio = yield db.cambiarEstudianteParalelo({ paraleloNuevo, estudianteIdentificador })
+            if (!seCambio) {
+              logger.error('actualizarEstudiantesCambiadosParalelo', estudiante)
+            }
+          }
+          resolve(true)
+        }).catch((err) => {
+          logger.error('actualizarEstudiantesCambiadosParalelo', err)
+          reject(err)
+        })
+      })
     },
-    actualizarEstudiantesCambiadoCorreo({}) {
-
+    /**
+      * @Promise
+      * @param { array } estudiantesCambiadoCorreo
+      * @resolve { }
+      * @reject { error }
+    */
+    actualizarEstudiantesCambiadoCorreo({ estudiantesCambiadoCorreo }) {
+      return new Promise((resolve, reject) => {
+        co(function* () {
+          let cantidadEstudiantes = estudiantesCambiadoCorreo.length
+          for (let i = 0; i < cantidadEstudiantes; i++) {
+            let estudiante = estudiantesCambiadoCorreo[i]
+            let estudianteIdentificador = estudiante['matricula']
+            let correoNuevo = estudiante['correoNuevo']
+            let seCambio = yield db.cambiarCorreoEstudiante({ correoNuevo, estudianteIdentificador })
+            if (!seCambio) {
+              logger.error('actualizarEstudiantesCambiadoCorreo', estudiante)
+            }
+          }
+          resolve(true)
+        }).catch((err) => {
+          logger.error('actualizarEstudiantesAnadidos', err)
+          reject(err)
+        })
+      })
     },
-    actualizarEstudiantesCambiadoNombres({}) {
-
+    /**
+      * @Promise
+      * @param { array } estudiantesCambiadosNombres
+      * @resolve { }
+      * @reject { error }
+    */
+    actualizarEstudiantesCambiadoNombres({ estudiantesCambiadosNombres }) {
+      return new Promise((resolve, reject) => {
+        co(function* () {
+          let cantidadEstudiantes = estudiantesCambiadosNombres.length
+          for (let i = 0; i < cantidadEstudiantes; i++) {
+            let estudiante = estudiantesCambiadosNombres[i]
+            let estudianteIdentificador = estudiante['matricula']
+            let nombresNuevo = estudiante['nombresNuevo']
+            let seCambio = yield db.cambiarNombresEstudiante({ nombresNuevo, estudianteIdentificador })
+            if (!seCambio) {
+              logger.error('actualizarEstudiantesCambiadoNombres', estudiante)
+            }
+          }
+          resolve(true)
+        }).catch((err) => {
+          logger.error('actualizarEstudiantesCambiadoNombres', err)
+          reject(err)
+        })
+      })
     },
-    actualizarEstudiantesCambiadoApellidos({}) {
-
+    actualizarEstudiantesCambiadoApellidos({ estudiantesCambiadosApellidos }) {
+      return new Promise((resolve, reject) => {
+        co(function* () {
+          let cantidadEstudiantes = estudiantesCambiadosApellidos.length
+          for (let i = 0; i < cantidadEstudiantes; i++) {
+            let estudiante = estudiantesCambiadosApellidos[i]
+            let estudianteIdentificador = estudiante['matricula']
+            let apellidosNuevo = estudiante['apellidosNuevo']
+            let seCambio = yield db.cambiarApellidosEstudiante({ apellidosNuevo, estudianteIdentificador })
+            if (!seCambio) {
+              logger.error('actualizarEstudiantesCambiadoApellidos', estudiante)
+            }
+          }
+          resolve(true)
+        }).catch((err) => {
+          logger.error('actualizarEstudiantesCambiadoApellidos', err)
+          reject(err)
+        })
+      })
     },
-    // cambio de paralelo
-    // retirado
     actualizarProfesores({ profesoresWS, profesoresDB }) {
-
+      // cambio de paralelo
+      // retirado
     },
-    // agregar uno nuevo
-    // eliminar uno
     actualizarParalelo({ paralelosWS, paralelosDB }) {
-
+      // agregar uno nuevo
+      // eliminar uno
     },
     // helpers
-    estudiantesIguales(estudiante1, estudiante2) {
-      var iguales = estudiante1.matricula === estudiante2.matricula
-      if (iguales)
-        return true
-      return false
+    /**
+      * Anade al propiedades termino y anio a un array de objetos json
+      * @param { string } termino
+      * @param { string } anio
+      * @param { array } json
+      * @return { error }
+    */
+    anadirTerminoYAnio({ termino, anio, json }) {
+      let datosAnadidos = json.map((obj) => {
+        obj.termino = termino
+        obj.anio = anio
+        return obj
+      })
+      return datosAnadidos
     }
   }
   return Object.assign(Object.create(proto), {})
