@@ -1,1 +1,92 @@
-[{"nombres":"EDUARDO EFRAIN","apellidos":"MONTERO CARPIO","correo":"emontero@espol.edu.ec","paralelo":"1","codigoMateria":"FISG1002","nombreMateria":"FÍSICA II","tipo":"titular"},{"nombres":"JOSE GERARDO","apellidos":"SACARELO MELENDEZ","correo":"jsacarel@espol.edu.ec","paralelo":"2","codigoMateria":"FISG1002","nombreMateria":"FÍSICA II","tipo":"titular"},{"nombres":"MONICA TAMARA","apellidos":"HEREDIA MUÑOZ","correo":"mheredia@espol.edu.ec","paralelo":"3","codigoMateria":"FISG1002","nombreMateria":"FÍSICA II","tipo":"titular"},{"nombres":"CARLOS VINICIO","apellidos":"MORENO MEDINA","correo":"cmoreno@espol.edu.ec","paralelo":"4","codigoMateria":"FISG1002","nombreMateria":"FÍSICA II","tipo":"titular"},{"nombres":"BOLIVAR CIRILO","apellidos":"FLORES NICOLALDE","correo":"bcflores@espol.edu.ec","paralelo":"5","codigoMateria":"FISG1002","nombreMateria":"FÍSICA II","tipo":"titular"},{"nombres":"LUIS","apellidos":"DEL POZO BARREZUETA","correo":"lpozo@espol.edu.ec","paralelo":"1","codigoMateria":"FISG1003","nombreMateria":"FÍSICA III","tipo":"titular"},{"nombres":"FLORENCIO RAMON","apellidos":"PINELA CONTRERAS","correo":"fpinela@espol.edu.ec","paralelo":"2","codigoMateria":"FISG1003","nombreMateria":"FÍSICA III","tipo":"titular"},{"nombres":"JORGE ENRIQUE","apellidos":"ROBLERO WONG","correo":"jroblero@espol.edu.ec","paralelo":"3","codigoMateria":"FISG1003","nombreMateria":"FÍSICA III","tipo":"titular"},{"nombres":"HERNANDO EDUARDO","apellidos":"SANCHEZ CAICEDO","correo":"hsanchez@espol.edu.ec","paralelo":"1","codigoMateria":"FISG2001","nombreMateria":"FÍSICA CONCEPTUAL","tipo":"titular"},{"nombres":"HERNANDO EDUARDO","apellidos":"SANCHEZ CAICEDO","correo":"hsanchez@espol.edu.ec","paralelo":"2","codigoMateria":"FISG2001","nombreMateria":"FÍSICA CONCEPTUAL","tipo":"titular"}]
+[
+  {
+    "nombres": "EDUARDO EFRAIN",
+    "apellidos": "MONTERO CARPIO",
+    "correo": "emontero@espol.edu.ec",
+    "paralelo": "1",
+    "codigoMateria": "FISG1002",
+    "nombreMateria": "FÍSICA II",
+    "tipo": "titular"
+  },
+  {
+    "nombres": "JOSE GERARDO",
+    "apellidos": "SACARELO MELENDEZ",
+    "correo": "jsacarel@espol.edu.ec",
+    "paralelo": "2",
+    "codigoMateria": "FISG1002",
+    "nombreMateria": "FÍSICA II",
+    "tipo": "titular"
+  },
+  {
+    "nombres": "MONICA TAMARA",
+    "apellidos": "HEREDIA MUÑOZ",
+    "correo": "mheredia@espol.edu.ec",
+    "paralelo": "3",
+    "codigoMateria": "FISG1002",
+    "nombreMateria": "FÍSICA II",
+    "tipo": "titular"
+  },
+  {
+    "nombres": "CARLOS VINICIO",
+    "apellidos": "MORENO MEDINA",
+    "correo": "cmoreno@espol.edu.ec",
+    "paralelo": "4",
+    "codigoMateria": "FISG1002",
+    "nombreMateria": "FÍSICA II",
+    "tipo": "titular"
+  },
+  {
+    "nombres": "BOLIVAR CIRILO",
+    "apellidos": "FLORES NICOLALDE",
+    "correo": "bcflores@espol.edu.ec",
+    "paralelo": "5",
+    "codigoMateria": "FISG1002",
+    "nombreMateria": "FÍSICA II",
+    "tipo": "titular"
+  },
+  {
+    "nombres": "LUIS",
+    "apellidos": "DEL POZO BARREZUETA",
+    "correo": "lpozo@espol.edu.ec",
+    "paralelo": "1",
+    "codigoMateria": "FISG1003",
+    "nombreMateria": "FÍSICA III",
+    "tipo": "titular"
+  },
+  {
+    "nombres": "FLORENCIO RAMON",
+    "apellidos": "PINELA CONTRERAS",
+    "correo": "fpinela@espol.edu.ec",
+    "paralelo": "2",
+    "codigoMateria": "FISG1003",
+    "nombreMateria": "FÍSICA III",
+    "tipo": "titular"
+  },
+  {
+    "nombres": "JORGE ENRIQUE",
+    "apellidos": "ROBLERO WONG",
+    "correo": "jroblero@espol.edu.ec",
+    "paralelo": "3",
+    "codigoMateria": "FISG1003",
+    "nombreMateria": "FÍSICA III",
+    "tipo": "titular"
+  },
+  {
+    "nombres": "HERNANDO EDUARDO",
+    "apellidos": "SANCHEZ CAICEDO",
+    "correo": "hsanchez@espol.edu.ec",
+    "paralelo": "1",
+    "codigoMateria": "FISG2001",
+    "nombreMateria": "FÍSICA CONCEPTUAL",
+    "tipo": "titular"
+  },
+  {
+    "nombres": "HERNANDO EDUARDO",
+    "apellidos": "SANCHEZ CAICEDO",
+    "correo": "hsanchez@espol.edu.ec",
+    "paralelo": "2",
+    "codigoMateria": "FISG2001",
+    "nombreMateria": "FÍSICA CONCEPTUAL",
+    "tipo": "titular"
+  }
+]

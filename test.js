@@ -9,16 +9,16 @@ const co = require('co')
 const _ = require('lodash')
 const jsonfile = require('jsonfile')
 const chaiXml = require('chai-xml')
+const Ajv = require('ajv')
+const ajv = new Ajv({$data: true})
+const jsondiffpatch = require('jsondiffpatch').create({
+  arrays: {
+    detectMove: true,
+    includeValueOnMove: true
+  }
+})
+
 chai.use(chaiXml)
-// const Datastore = require('nedb')
-// let Estudiantes = new Datastore({ filename: path.join(__dirname, 'dump/estudiantes.db'), autoload: true })
-// let Profesores = new Datastore({ filename: path.join(__dirname, 'dump/profesores.db'), autoload: true })
-// let Paralelos = new Datastore({ filename: path.join(__dirname, 'dump/paralelos.db'), autoload: true })
-// const db = {
-//   Estudiantes,
-//   Profesores,
-//   Paralelos
-// }
 
 const WSPPL = require('./app')
 const dump = require('./dump')
@@ -26,7 +26,7 @@ const config = require('./config')
 const dumpFolder = path.join(__dirname, './dump')
 
 const dbMock = {
-  	crearEstudiante({ nombres, apellidos, correo, matricula }) { // null si no se creo o lo que sea?
+  	crearEstudiante({ nombres, apellidos, correo, matricula }) { // null si no se creo o lo que sea?. Aqui se debe implementar cosas extras como ingresarlo a grupo
   	  return Promise.resolve({ nombres, apellidos, correo, matricula })
   	},
   	crearProfesor({ nombres, apellidos, correo, tipo }) {
@@ -35,18 +35,27 @@ const dbMock = {
   	crearParalelo({ codigoMateria, nombreMateria, paralelo}) {
       return Promise.resolve({ codigoMateria, nombreMateria, paralelo})
   	},
-  	anadirEstudiantAParalelo({ paralelo: { curso, codigo }, estudianteCorreo }) {
+  	anadirEstudiantAParalelo({ paralelo: { curso, codigo }, estudianteIdentificador }) { // Aqui se debe implementar cosas extras como ingresarlo a grupo
+      return Promise.resolve({ paralelo: { curso, codigo }, estudianteIdentificador })
+  	},
+  	anadirProfesorAParalelo({ paralelo: { curso, codigo }, profesorIdentificador }) {
+  	  return Promise.resolve({ paralelo: { curso, codigo }, profesorIdentificador })
+  	},
+  	eliminarEstudiante({ estudianteIdentificador }) { // tiene que moverse de paralelo y vera que hace el que la implementa
+      return Promise.resolve(true)
+  	},
+  	cambiarEstudianteParalelo({ paraleloNuevo: { cursoNuevo, codigoNuevo }, paraleloAntiguo: { cursoAntiguo, codigoAntiguo }, estudianteIdentificador }) {
+      return Promise.resolve(true)
+  	},
+    estudiantesDB({}) {
 
-  	},
-  	anadirProfesorAParalelo({ paralelo: { curso, codigo }, profesorCorreo }) {
-  	  return Promise.resolve({ paralelo: { curso, codigo }, profesorCorreo })
-  	},
-  	eliminarEstudiante({ matricula }) {
+    },
+    profesoresDB({}) {
 
-  	},
-  	cambiarEstudianteParalelo({ paraleloNuevo: { cursoNuevo, codigoNuevo }, paraleloAntiguo: { cursoAntiguo, codigoAntiguo }, estudianteCorreo }) {
+    },
+    paralelosDB({}) {
 
-  	},
+    },
   	// extras, para comprobacion de datos
   	buscarEstudiante({}) {
 
@@ -66,15 +75,10 @@ const dbMock = {
 }
 
 const db = dbMock
-const wsPPL = WSPPL({ soap, cheerio, fs,  path, co, _, config, db })
-
+const wsPPL = WSPPL({ soap, cheerio, fs,  path, co, _, config, db, jsondiffpatch })
+// expect(ajv.validate(schema.PROFESOR_DATOS, res.body.datos)).to.equal(true)
 describe('PPL WEB SERVICE', () =>  {
-  // let estudiantesDump = dump.estudiantes()
-  // let profesorDump = dump.profesores()
   before(function(done) {
-    // db.Estudiantes.loadDatabase()
-    // db.Profesores.loadDatabase()
-    // db.Paralelos.loadDatabase()
     done()
   })
   it('@t1 OBTENER RAW ESTUDIANTES', (done) => {
@@ -122,7 +126,7 @@ describe('PPL WEB SERVICE', () =>  {
       done()
   	}).timeout(20000)
   })
-  
+
   describe('@t4 GENERAR JSON PROFESOR', () =>  {
   	it('@t4.1 OK TITULAR', (done) => {
   	  const profesorDump = dump.profesorTitularWSDL.raw
@@ -176,20 +180,70 @@ describe('PPL WEB SERVICE', () =>  {
   	  it('@t7.1.1 OK', (done) => {
   	  	let paralelosJson = dump.paralelos[0]
   	  	wsPPL.guardarParalelos({ paralelosJson }).then((estado) => {
-  	      console.log(estado)
+  	      expect(estado).to.be.true
   	      done()
   	  	}).catch((err) => console.log(err))
   	  })
   	})
   	describe('@t7.2 ESTUDIANTES', () =>  {
   	  it('@t7.2.1 OK', (done) => {
-  	  	let profesoresJson = dump.profesoresJson[0]
-  	  	wsPPL.guardarProfesores({ profesoresJson }).then((estado) => {
-  	      console.log(estado)
+  	  	let estudiantesJson = dump.estudiantesJson[0]
+  	  	wsPPL.guardarEstudiantes({ estudiantesJson }).then((estado) => {
+          expect(estado).to.be.true
   	      done()
   	  	}).catch((err) => console.log(err))
   	  })
   	})
+    describe('@t7.3 PROFESOR', () =>  {
+  	  it('@t7.3.1 OK', (done) => {
+  	  	let profesoresJson = dump.profesoresJson[0]
+  	  	wsPPL.guardarProfesores({ profesoresJson }).then((estado) => {
+          expect(estado).to.be.true
+  	      done()
+  	  	}).catch((err) => console.log(err))
+  	  })
+  	})
+    describe('@t7.4 ACTUALIZAR', () =>  {
+      it('@t7.4.1 ESTUDIANTE CAMBIO PARALELO', (done) => {
+        let estudiantesJsonWS = dump.estudiantesJson[0]
+        let estudiantesJsonDB = JSON.parse(JSON.stringify(estudiantesJsonWS))
+        estudiantesJsonWS[0]['paralelo'] = '2'
+        wsPPL.actualizarEstudiantes({ estudiantesWS: estudiantesJsonWS, estudiantesDB: estudiantesJsonDB }).then((resp) => {
+          expect(resp).to.be.true
+          done()
+        })
+      })
+      it('@t7.4.2 ESTUDIANTE RETIRADO', (done) => {
+        let estudiantesJsonWS = dump.estudiantesJson[0]
+        let estudiantesJsonDB = JSON.parse(JSON.stringify(estudiantesJsonWS))
+        estudiantesJsonWS.splice(1,1)
+        wsPPL.actualizarEstudiantes({ estudiantesWS: estudiantesJsonWS, estudiantesDB: estudiantesJsonDB }).then((resp) => {
+          expect(resp).to.be.true
+          done()
+        })
+      })
+      it('@t7.4.3 ESTUDIANTE NUEVO', (done) => {
+        let estudiantesJsonWS = dump.estudiantesJson[0]
+        let estudiantesJsonDB = JSON.parse(JSON.stringify(estudiantesJsonWS))
+        estudiantesJsonDB.splice(1,1)
+        wsPPL.actualizarEstudiantes({ estudiantesWS: estudiantesJsonWS, estudiantesDB: estudiantesJsonDB }).then((resp) => {
+          expect(resp).to.be.true
+          done()
+        })
+      })
+      it('@t7.4.4 ESTUDIANTE CAMBIO CORREO', (done) => {
+
+      })
+      it('@t7.4.5 ESTUDIANTE CAMBIO NOMBRES', (done) => {
+
+      })
+      it('@t7.4.6 ESTUDIANTE CAMBIO APELLIDOS', (done) => {
+
+      })
+      it('@t7.4.7 CAMBIO PARALELO, ACTUALIZAR CORREO, NUEVOS, ELIMINADOS', (done) => {
+
+      })
+    })
   })
 
 })

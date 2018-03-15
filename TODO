@@ -92,7 +92,19 @@ wsPPL.generarJsonEstudiantesTodos({ anio: '2017',termino: '2s' }).then((res) => 
       done()
     })
   })
+  // const Datastore = require('nedb')
+  // let Estudiantes = new Datastore({ filename: path.join(__dirname, 'dump/estudiantes.db'), autoload: true })
+  // let Profesores = new Datastore({ filename: path.join(__dirname, 'dump/profesores.db'), autoload: true })
+  // let Paralelos = new Datastore({ filename: path.join(__dirname, 'dump/paralelos.db'), autoload: true })
+  // const db = {
+  //   Estudiantes,
+  //   Profesores,
+  //   Paralelos
+  // }
 
+  // db.Estudiantes.loadDatabase()
+  // db.Profesores.loadDatabase()
+  // db.Paralelos.loadDatabase()
 
 
 
@@ -109,7 +121,7 @@ pasar un json
     intervalo
   }
   db: { // todos son promises y oblitorios, documentar que recibe y que tiene que devolver
-    obtenerEstudiantesDB // 
+    obtenerEstudiantesDB //
     obtenerProfesoresDB //
     crearEstudiante
     crearProfesor

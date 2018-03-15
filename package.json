@@ -5,6 +5,7 @@
   "author": "Joel Rodriguez <joelerll@gmail.com>",
   "license": "MIT",
   "dependencies": {
+    "ajv": "^6.2.1",
     "chai": "^4.1.2",
     "chai-xml": "^0.3.2",
     "cheerio": "^1.0.0-rc.2",
@@ -23,6 +24,7 @@
     "moment": "^2.21.0",
     "mongoose": "^5.0.10",
     "nedb": "^1.8.0",
+    "nodemon": "^1.17.2",
     "nunjucks": "^3.1.2",
     "nyc": "^11.4.1",
     "sinon": "^4.4.5",
@@ -32,6 +34,7 @@
   },
   "scripts": {
     "test": "cross-env NODE_ENV=testing env-cmd .env mocha test.js --timeout 15000 --reporter spec --bail",
+    "p": "cross-env NODE_ENV=testing env-cmd .env nodemon ejemplo.js",
     "dev": "nodemon server.js"
   }
 }
