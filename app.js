@@ -49,7 +49,7 @@ module.exports = ({ soap, cheerio, co, fs, path, config, db, _, jsondiffpatch, l
       * Devuelve todos los profesores de todos los paralelos.
       * @param {string} termino - puede ser 1s o 2s
       * @param {string} anio
-      * @returns {array}
+      * @resolve {array} profesores
     */
     generarJsonProfesoresTodos({ termino, anio }) {
       // TODO: cambiarlo a do while
@@ -93,13 +93,14 @@ module.exports = ({ soap, cheerio, co, fs, path, config, db, _, jsondiffpatch, l
     },
     /**
       * @promise
+      * @testeado @t1, @t2
       * Devuelve el xml del lo que se pida de la webService.
       * Es usada tanto en estudiantes, peers o profesores
       * @param { json } argumentos - dependiento que cual sea el metodo, debe pasarse los argumentos.
       *                              ver el archivo json.schema.js
       * @param { string } metodo - ver el archivo config.js para los metodos disponibles
-      * @resolve { string }  
-      * @reject { error }  
+      * @resolve { string }
+      * @reject { error }
     */
     obtenerRaw({ argumentos, metodo }) {
       if ( !argumentos || ! metodo)
@@ -114,9 +115,10 @@ module.exports = ({ soap, cheerio, co, fs, path, config, db, _, jsondiffpatch, l
       })
     },
     /**
+      * @testeado @t6
       * Genera los paralelos existentes
       * @param { array } estudiantesJson - Los estudiantes siguiendo el formato de json.schema.js
-      * @returns { array }  
+      * @returns { array }
     */
     generarJsonParalelosTodos({ estudiantesJson }) {
       let paralelos = _.uniqBy(estudiantesJson, (e) => {
@@ -128,6 +130,7 @@ module.exports = ({ soap, cheerio, co, fs, path, config, db, _, jsondiffpatch, l
       return paralelosLimpiados
     },
     /**
+      * @testeado @t3
       * Genera los estudiantes con las propiedades segun el archivo json.schema.js
       * @param { string } raw - xml pedido de la web service
       * @returns { array } - [estudiantes]
@@ -154,6 +157,7 @@ module.exports = ({ soap, cheerio, co, fs, path, config, db, _, jsondiffpatch, l
       return estudiantesDatos
     },
     /**
+      * @testeado @t4
       * Genera el profesor con las propiedades segun el archivo json.schema.js
       * @param { string } raw - xml pedido de la web service
       * @param { string } tipo - ver el archivo de config.js
@@ -177,6 +181,7 @@ module.exports = ({ soap, cheerio, co, fs, path, config, db, _, jsondiffpatch, l
       return profesorDatos['correo'] ? profesorDatos : {}
     },
     /**
+      * @testing @t7.1
       * @Promise
       * Guarda en la base de datos
       * @param { array } paralelosJson - paralelos segun el esquema json.schema.js
@@ -202,6 +207,7 @@ module.exports = ({ soap, cheerio, co, fs, path, config, db, _, jsondiffpatch, l
       })
     },
     /**
+      * @testing @t7.3
       * @Promise
       * Guarda en la base de datos
       * @param { array } profesoresJson - profesores segun el esquema json.schema.js
@@ -209,15 +215,16 @@ module.exports = ({ soap, cheerio, co, fs, path, config, db, _, jsondiffpatch, l
       * @reject { error }
     */
     guardarProfesores({ profesoresJson }) {
+      // TODO: unir crearProfesor y anadirProfesorAParalelo en una sola accion
       const cantidaProfesores = profesoresJson.length
       return new Promise((resolve, reject) => {
         co(function *() {
           for (var i = 0; i < cantidaProfesores ; i++) {
-            let { nombres, apellidos, correo, tipo, paralelo, codigoMateria } = profesoresJson[i]
-            let estado = yield db.crearProfesor({ nombres, apellidos, correo, tipo })
-            let estadoParalelo = yield db.anadirProfesorAParalelo({ paralelo: { curso: paralelo, codigo: codigoMateria }, profesorIdentificador: correo })
-            if (!estado || !estadoParalelo) {
-              logger.error('guardarProfesores', profesoresJson[i])
+            let profesor = profesoresJson[i]
+            let { nombres, apellidos, correo, tipo, paralelo, codigoMateria } = profesor
+            let fueCreado = yield db.crearProfesor({ nombres, apellidos, correo, tipo, paralelo, codigoMateria })
+            if (!fueCreado) {
+              logger.error('guardarProfesores', profesor)
             }
           }
           resolve(true)
