@@ -4,9 +4,10 @@ const path = require('path')
 const fs = require('fs')
 const co = require('co')
 const _ = require('lodash')
+const logger = require('tracer').console()
 const WSPPL = require('./app')
 const config = require('./config')
-const ajv = new Ajv({$data: true})
+// const ajv = new Ajv({$data: true})
 const jsondiffpatch = require('jsondiffpatch').create({
   arrays: {
     detectMove: true,
@@ -20,7 +21,7 @@ module.exports = ({ db, anio, termino, profesoresBase }) => {
   // verificar que termino sea valido
   // verifivar que anio sea valido
   // verificar que db tenga las propiedades basicas y que retornen todos promises
-  const wsPPL = WSPPL({ soap, cheerio, fs,  path, co, _, config, db, jsondiffpatch })
+  const wsPPL = WSPPL({ soap, cheerio, fs,  path, co, _, config, db, jsondiffpatch, logger })
   const TERMINO_ACTUAL = termino || config.terminoActual()
   const ANIO_ACTUAL = anio || config.anioActual
   const proto = {
@@ -28,9 +29,9 @@ module.exports = ({ db, anio, termino, profesoresBase }) => {
       co(function* () {
         const estudiantesJson = yield wsPPL.generarJsonEstudiantesTodos({ termino: TERMINO_ACTUAL, anio: ANIO_ACTUAL })
         const profesoresJson = yield wsPPL.generarJsonProfesoresTodos({ termino: TERMINO_ACTUAL, anio: ANIO_ACTUAL })
-        const paralelosJson = anadirTerminoYAnio({ termino: TERMINO_ACTUAL, anio: ANIO_ACTUAL, json: wsPPL.generarJsonParalelosTodos({ estudiantesJson }) }
+        const paralelosJson = wsPPL.anadirTerminoYAnio({ termino: TERMINO_ACTUAL, anio: ANIO_ACTUAL, json: wsPPL.generarJsonParalelosTodos({ estudiantesJson }) })
+        
         const estaGuardadoParalelo = yield wsPPL.guardarParalelos({ paralelosJson })
-
         const estaGuardadoProfesor = yield wsPPL.guardarProfesores({ profesoresJson })
         const estaGuardadoEstudiante = yield wsPPL.guardarEstudiantes({ estudiantesJson })
         if (estaGuardadoParalelo && estaGuardadoProfesor && estaGuardadoEstudiante)

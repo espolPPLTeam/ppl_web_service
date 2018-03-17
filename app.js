@@ -215,11 +215,10 @@ module.exports = ({ soap, cheerio, co, fs, path, config, db, _, jsondiffpatch, l
       * @reject { error }
     */
     guardarProfesores({ profesoresJson }) {
-      // TODO: unir crearProfesor y anadirProfesorAParalelo en una sola accion
       const cantidaProfesores = profesoresJson.length
       return new Promise((resolve, reject) => {
         co(function *() {
-          for (var i = 0; i < cantidaProfesores ; i++) {
+          for (let i = 0; i < cantidaProfesores ; i++) {
             let profesor = profesoresJson[i]
             let { nombres, apellidos, correo, tipo, paralelo, codigoMateria } = profesor
             let fueCreado = yield db.crearProfesor({ nombres, apellidos, correo, tipo, paralelo, codigoMateria })
@@ -235,7 +234,7 @@ module.exports = ({ soap, cheerio, co, fs, path, config, db, _, jsondiffpatch, l
       })
     },
     /**
-      * @Promise
+      * @Promise @t7.2
       * Guarda en la base de datos
       * @param { array } estudiantesJson - estudiantes segun el esquema json.schema.js
       * @returns { boolean } - true
@@ -245,12 +244,12 @@ module.exports = ({ soap, cheerio, co, fs, path, config, db, _, jsondiffpatch, l
       const cantidadEstudiantes = estudiantesJson.length
       return new Promise((resolve, reject) => {
         co(function *() {
-          for (var i = 0; i < cantidadEstudiantes ; i++) {
-            let { nombres, apellidos, correo, matricula, paralelo, codigoMateria } = estudiantesJson[i]
-            let estado = yield db.crearEstudiante({ nombres, apellidos, correo, matricula })
-            let estadoParalelo = yield db.anadirEstudiantAParalelo({ paralelo: { curso: paralelo, codigo: codigoMateria }, estudianteIdentificador: correo })
-            if (!estado || !estadoParalelo) {
-              logger.error('guardarEstudiantes', estudiantesJson[i])
+          for (let i = 0; i < cantidadEstudiantes ; i++) {
+            let estudiante = estudiantesJson[i]
+            let { nombres, apellidos, correo, matricula, paralelo, codigoMateria } = estudiante
+            let estado = yield db.crearEstudiante({ nombres, apellidos, correo, matricula, paralelo, codigoMateria })
+            if (!estado) {
+              logger.error('guardarEstudiantes', estudiante)
             }
           }
           resolve(true)
@@ -351,11 +350,9 @@ module.exports = ({ soap, cheerio, co, fs, path, config, db, _, jsondiffpatch, l
           for (let i = 0; i < cantidadEstudiantesNuevos; i++) {
             let estudiante = estudiantesNuevosWS[i]
             let estudianteIdentificador = estudiante['matricula']
-            let { nombres, apellidos, correo, matricula } = estudiante
-            let fueCreado = yield db.crearEstudiante({ nombres, apellidos, correo, matricula })
-            let { paralelo, codigoMateria } = estudiante
-            let fueAnadidoAParalelo = yield db.anadirEstudiantAParalelo({ paralelo: { curso: paralelo, codigo: codigoMateria }, estudianteIdentificador: correo })
-            if (!fueCreado || !fueAnadidoAParalelo) {
+            let { nombres, apellidos, correo, matricula, paralelo, codigoMateria } = estudiante
+            let fueCreado = yield db.crearEstudiante({ nombres, apellidos, correo, matricula, paralelo,  codigoMateria })
+            if (!fueCreado) {
               logger.error('actualizarEstudiantesAnadidos',estudiante)
             }
           }
@@ -410,19 +407,38 @@ module.exports = ({ soap, cheerio, co, fs, path, config, db, _, jsondiffpatch, l
             let apellidosNuevo =  diferencias[estudiantesConCambios[i]].apellidos[1]
             let estudianteAnadir = JSON.parse(JSON.stringify(estudiante))
             estudianteAnadir['apellidosNuevo'] = apellidosNuevo
-            estudiantesCambiadoCorreo.push(estudianteAnadir)
+            estudiantesCambiadosApellidos.push(estudianteAnadir)
           }
         }
-        logger.info('estudiantes cambiado paralelo',estudiantesCambiadoParalelo)
-        logger.info('estudiantes cambiado correo', estudiantesCambiadoCorreo)
-        logger.info('estudiantes cambiado nombres',estudiantesCambiadosNombres)
-        logger.info('estudiantes cambiado apellidos', estudiantesCambiadosApellidos)
+        if (estudiantesCambiadoParalelo.length)
+          logger.info('estudiantes cambiado paralelo',estudiantesCambiadoParalelo)
+        if (estudiantesCambiadoCorreo.length)
+          logger.info('estudiantes cambiado correo', estudiantesCambiadoCorreo)
+        if (estudiantesCambiadosNombres.length)
+          logger.info('estudiantes cambiado nombres',estudiantesCambiadosNombres)
+        if (estudiantesCambiadosApellidos.length)
+          logger.info('estudiantes cambiado apellidos', estudiantesCambiadosApellidos)
         co(function* () {
-          const paralelos = yield db.paralelos({})
-          yield self.actualizarEstudiantesCambiadosParalelo({ estudiantesCambiadoParalelo })
-          yield self.actualizarEstudiantesCambiadoCorreo({ estudiantesCambiadoCorreo })
-          yield self.actualizarEstudiantesCambiadoNombres({ estudiantesCambiadosNombres })
-          yield self.actualizarEstudiantesCambiadoApellidos({ estudiantesCambiadosApellidos })
+          yield self.actualizarEstudiantesCambios({ 
+            estudiantesDatos: estudiantesCambiadoParalelo,
+            nombreMetodoDb: 'cambiarEstudianteParalelo',
+            nombreDatoNuevo: 'paraleloNuevo'
+          })
+          yield self.actualizarEstudiantesCambios({ 
+            estudiantesDatos: estudiantesCambiadoCorreo,
+            nombreMetodoDb: 'cambiarCorreoEstudiante',
+            nombreDatoNuevo: 'correoNuevo'
+          })
+          yield self.actualizarEstudiantesCambios({ 
+            estudiantesDatos: estudiantesCambiadosNombres,
+            nombreMetodoDb: 'cambiarNombresEstudiante',
+            nombreDatoNuevo: 'nombresNuevo'
+          })
+          yield self.actualizarEstudiantesCambios({ 
+            estudiantesDatos: estudiantesCambiadosApellidos,
+            nombreMetodoDb: 'cambiarApellidosEstudiante',
+            nombreDatoNuevo: 'apellidosNuevo'
+          })
           resolve(true)
         }).catch((err) => {
           logger.error('actualizarEstudiantesEditados',err)
@@ -432,98 +448,28 @@ module.exports = ({ soap, cheerio, co, fs, path, config, db, _, jsondiffpatch, l
     },
     /**
       * @Promise
-      * @param { array } estudiantesCambiadoParalelo
+      * @param { estudiantesDatos }
+      * @param { nombreMetodoDb }
+      * @param { nombreDatoNuevo }
       * @resolve { }
       * @reject { error }
     */
-    actualizarEstudiantesCambiadosParalelo({ estudiantesCambiadoParalelo }) {
+    actualizarEstudiantesCambios({ estudiantesDatos, nombreMetodoDb, nombreDatoNuevo }) {
       return new Promise((resolve, reject) => {
         co(function* () {
-          let cantidadEstudiantes = estudiantesCambiadoParalelo.length
+          let cantidadEstudiantes = estudiantesDatos.length
           for (let i = 0; i < cantidadEstudiantes; i++) {
-            let estudiante = estudiantesCambiadoParalelo[i]
+            let estudiante = estudiantesDatos[i]
             let estudianteIdentificador = estudiante['matricula']
-            let paraleloNuevo = estudiante['paraleloNuevo']
-            let seCambio = yield db.cambiarEstudianteParalelo({ paraleloNuevo, estudianteIdentificador })
+            let nuevoDato = estudiante[nombreDatoNuevo]
+            let seCambio = yield db[nombreMetodoDb]({ nuevo: nuevoDato, estudianteIdentificador })
             if (!seCambio) {
-              logger.error('actualizarEstudiantesCambiadosParalelo', estudiante)
+              logger.error(nombreMetodoDb, estudiante)
             }
           }
           resolve(true)
         }).catch((err) => {
-          logger.error('actualizarEstudiantesCambiadosParalelo', err)
-          reject(err)
-        })
-      })
-    },
-    /**
-      * @Promise
-      * @param { array } estudiantesCambiadoCorreo
-      * @resolve { }
-      * @reject { error }
-    */
-    actualizarEstudiantesCambiadoCorreo({ estudiantesCambiadoCorreo }) {
-      return new Promise((resolve, reject) => {
-        co(function* () {
-          let cantidadEstudiantes = estudiantesCambiadoCorreo.length
-          for (let i = 0; i < cantidadEstudiantes; i++) {
-            let estudiante = estudiantesCambiadoCorreo[i]
-            let estudianteIdentificador = estudiante['matricula']
-            let correoNuevo = estudiante['correoNuevo']
-            let seCambio = yield db.cambiarCorreoEstudiante({ correoNuevo, estudianteIdentificador })
-            if (!seCambio) {
-              logger.error('actualizarEstudiantesCambiadoCorreo', estudiante)
-            }
-          }
-          resolve(true)
-        }).catch((err) => {
-          logger.error('actualizarEstudiantesAnadidos', err)
-          reject(err)
-        })
-      })
-    },
-    /**
-      * @Promise
-      * @param { array } estudiantesCambiadosNombres
-      * @resolve { }
-      * @reject { error }
-    */
-    actualizarEstudiantesCambiadoNombres({ estudiantesCambiadosNombres }) {
-      return new Promise((resolve, reject) => {
-        co(function* () {
-          let cantidadEstudiantes = estudiantesCambiadosNombres.length
-          for (let i = 0; i < cantidadEstudiantes; i++) {
-            let estudiante = estudiantesCambiadosNombres[i]
-            let estudianteIdentificador = estudiante['matricula']
-            let nombresNuevo = estudiante['nombresNuevo']
-            let seCambio = yield db.cambiarNombresEstudiante({ nombresNuevo, estudianteIdentificador })
-            if (!seCambio) {
-              logger.error('actualizarEstudiantesCambiadoNombres', estudiante)
-            }
-          }
-          resolve(true)
-        }).catch((err) => {
-          logger.error('actualizarEstudiantesCambiadoNombres', err)
-          reject(err)
-        })
-      })
-    },
-    actualizarEstudiantesCambiadoApellidos({ estudiantesCambiadosApellidos }) {
-      return new Promise((resolve, reject) => {
-        co(function* () {
-          let cantidadEstudiantes = estudiantesCambiadosApellidos.length
-          for (let i = 0; i < cantidadEstudiantes; i++) {
-            let estudiante = estudiantesCambiadosApellidos[i]
-            let estudianteIdentificador = estudiante['matricula']
-            let apellidosNuevo = estudiante['apellidosNuevo']
-            let seCambio = yield db.cambiarApellidosEstudiante({ apellidosNuevo, estudianteIdentificador })
-            if (!seCambio) {
-              logger.error('actualizarEstudiantesCambiadoApellidos', estudiante)
-            }
-          }
-          resolve(true)
-        }).catch((err) => {
-          logger.error('actualizarEstudiantesCambiadoApellidos', err)
+          logger.error(nombreMetodoDb, err)
           reject(err)
         })
       })

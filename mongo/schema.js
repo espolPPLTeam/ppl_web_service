@@ -20,10 +20,15 @@ const ParaleloSchema = mongoose.Schema({
   codigo: { type: String },
   anio: { type: String },
   termino: { type: String, enum: ['1s', '2s'] },
-  paralelo: { type: String },
+  nombres: { type: String },
   estudiantes: [{
     type: String,
     ref: 'Estudiante',
+    field: 'correo'
+  }],
+  profesores: [{
+    type: String,
+    ref: 'Profesor',
     field: 'correo'
   }],
 },{timestamps: false, versionKey: false, collection: 'paralelos'})
@@ -66,6 +71,7 @@ ParaleloSchema.statics = {
     const self = this
     return new Promise(function(resolve) {
       self.update({$and: [{ codigo }, { curso }]}, {$addToSet: {'estudiantes': estudianteCorreo }}).then((accionEstado) => {
+        console.log(accionEstado)
         resolve(accionEstado.nModified ? true : false)
       })
     })
