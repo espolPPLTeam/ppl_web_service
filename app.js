@@ -485,6 +485,7 @@ module.exports = ({ soap, cheerio, co, fs, path, config, db, _, jsondiffpatch, l
     actualizarProfesores({ profesoresWS, profesoresDB }) {
       // cambio de paralelo
       // retirado
+			// anadir
     },
     actualizarParalelo({ paralelosWS, paralelosDB }) {
       // agregar uno nuevo
