@@ -150,7 +150,7 @@ describe('PPL WEB SERVICE', () =>  {
 
   describe('@t6 GENERAR PARALELOS JSON', () =>  {
     it('@t6.1 OK', (done) => {
-      const estudiantesJson = dump.estudiantesJson[0]
+      const estudiantesJson = dump.estudiantesJson()[0]
       let paralelos = wsPPL.generarJsonParalelosTodos({ estudiantesJson })
       expect(paralelos).to.have.lengthOf(8)
       expect(ajv.validate(schema.paralelosSinTerminoAnio, paralelos)).to.equal(true)
@@ -217,7 +217,7 @@ describe('PPL WEB SERVICE', () =>  {
       })
   	})
   	describe('@t7.2 ESTUDIANTES', () =>  {
-      let estudiantesJson = dump.estudiantesJson[0]
+      let estudiantesJson = dump.estudiantesJson()[0]
       let cantidadEstudiantes = estudiantesJson.length
       it('@t7.2.1 OK', (done) => {
         let cantidadLlamado = 0
@@ -271,7 +271,7 @@ describe('PPL WEB SERVICE', () =>  {
       })
   	})
     describe('@t7.3 PROFESOR', () =>  {
-      let profesoresJson = dump.profesoresJson[0]
+      let profesoresJson = dump.profesoresJson()[0]
   	  it('@t7.3.1 OK', (done) => {
         let cantidadLlamado = 0
         const db = {
@@ -325,15 +325,16 @@ describe('PPL WEB SERVICE', () =>  {
   	})
     describe('@t7.4 ACTUALIZAR', () =>  {
       it('@t7.4.1 ESTUDIANTE CAMBIO PARALELO', (done) => {
-        let estudiantesJsonWS = dump.estudiantesJson[0]
+        let estudiantesJsonWS = dump.estudiantesJson()[0]
         let estudiantesJsonDB = JSON.parse(JSON.stringify(estudiantesJsonWS))
         estudiantesJsonWS[0]['paralelo'] = '2'
         estudiantesJsonWS[1]['paralelo'] = '3'
         let cantidadLlamado = 0
         const db = {
-          cambiarEstudianteParalelo({ nuevo, estudianteIdentificador }){
+          cambiarEstudianteParalelo({ nuevo, correo, matricula }){
             expect(nuevo).to.not.be.undefined
-            expect(estudianteIdentificador).to.not.be.undefined
+            expect(correo).to.not.be.undefined
+            expect(matricula).to.not.be.undefined
             cantidadLlamado++
             return Promise.resolve(true)
           }
@@ -347,13 +348,16 @@ describe('PPL WEB SERVICE', () =>  {
         })
       })
       it('@t7.4.2 ESTUDIANTE RETIRADO', (done) => {
-        let estudiantesJsonWS = dump.estudiantesJson[0]
+        let estudiantesJsonWS = dump.estudiantesJson()[0]
         let estudiantesJsonDB = JSON.parse(JSON.stringify(estudiantesJsonWS))
         estudiantesJsonWS.splice(1,1)
         let cantidadLlamado = 0
         const db = {
-          eliminarEstudiante({ estudianteIdentificador }){
-            expect(estudianteIdentificador).to.not.be.undefined
+          eliminarEstudiante({ paralelo, codigoMateria, correo, matricula }){
+            expect(paralelo).to.not.be.undefined
+            expect(codigoMateria).to.not.be.undefined
+            expect(correo).to.not.be.undefined
+            expect(matricula).to.not.be.undefined
             cantidadLlamado++
             return Promise.resolve(true)
           }
@@ -367,7 +371,7 @@ describe('PPL WEB SERVICE', () =>  {
         })
       })
       it('@t7.4.3 ESTUDIANTE NUEVO', (done) => {
-        let estudiantesJsonWS = dump.estudiantesJson[0]
+        let estudiantesJsonWS = dump.estudiantesJson()[0]
         let estudiantesJsonDB = JSON.parse(JSON.stringify(estudiantesJsonWS))
         estudiantesJsonDB.splice(1,1)
         let cantidadLlamado = 0
@@ -392,14 +396,15 @@ describe('PPL WEB SERVICE', () =>  {
         })
       })
       it('@t7.4.4 ESTUDIANTE CAMBIO CORREO', (done) => {
-        let estudiantesJsonWS = dump.estudiantesJson[0]
+        let estudiantesJsonWS = dump.estudiantesJson()[0]
         let estudiantesJsonDB = JSON.parse(JSON.stringify(estudiantesJsonWS))
         estudiantesJsonWS[0]['correo'] = 'joelerll@gmail.com'
         let cantidadLlamado = 0
         const db = {
-          cambiarCorreoEstudiante({ nuevo, estudianteIdentificador }){
+          cambiarCorreoEstudiante({ nuevo, correo, matricula }){
             expect(nuevo).to.not.be.undefined
-            expect(estudianteIdentificador).to.not.be.undefined
+            expect(correo).to.not.be.undefined
+            expect(matricula).to.not.be.undefined
             cantidadLlamado++
             return Promise.resolve(true)
           }
@@ -413,14 +418,15 @@ describe('PPL WEB SERVICE', () =>  {
         })
       })
       it('@t7.4.5 ESTUDIANTE CAMBIO NOMBRES', (done) => {
-        let estudiantesJsonWS = dump.estudiantesJson[0]
+        let estudiantesJsonWS = dump.estudiantesJson()[0]
         let estudiantesJsonDB = JSON.parse(JSON.stringify(estudiantesJsonWS))
         estudiantesJsonWS[0]['nombres'] = 'Joel Eduardo'
         let cantidadLlamado = 0
         const db = {
-          cambiarNombresEstudiante({ nuevo, estudianteIdentificador }){
+          cambiarNombresEstudiante({ nuevo, correo, matricula }){
             expect(nuevo).to.not.be.undefined
-            expect(estudianteIdentificador).to.not.be.undefined
+            expect(correo).to.not.be.undefined
+            expect(matricula).to.not.be.undefined
             cantidadLlamado++
             return Promise.resolve(true)
           }
@@ -434,14 +440,15 @@ describe('PPL WEB SERVICE', () =>  {
         })
       })
       it('@t7.4.6 ESTUDIANTE CAMBIO APELLIDOS', (done) => {
-        let estudiantesJsonWS = dump.estudiantesJson[0]
+        let estudiantesJsonWS = dump.estudiantesJson()[0]
         let estudiantesJsonDB = JSON.parse(JSON.stringify(estudiantesJsonWS))
         estudiantesJsonWS[0]['apellidos'] = 'Rodriguez LLamuca'
         let cantidadLlamado = 0
         const db = {
-          cambiarApellidosEstudiante({ nuevo, estudianteIdentificador }){
+          cambiarApellidosEstudiante({ nuevo, correo, matricula }){
             expect(nuevo).to.not.be.undefined
-            expect(estudianteIdentificador).to.not.be.undefined
+            expect(correo).to.not.be.undefined
+            expect(matricula).to.not.be.undefined
             cantidadLlamado++
             return Promise.resolve(true)
           }
@@ -455,22 +462,24 @@ describe('PPL WEB SERVICE', () =>  {
         })
       })
       it('@t7.4.7 CAMBIO PARALELO, ACTUALIZAR CORREO, NUEVOS, ELIMINADOS', (done) => {
-        let estudiantesJsonWS = JSON.parse(JSON.stringify(dump.estudiantesJson[0]))
+        let estudiantesJsonWS = JSON.parse(JSON.stringify(dump.estudiantesJson()[0]))
         let estudiantesJsonDB = JSON.parse(JSON.stringify(estudiantesJsonWS))
         estudiantesJsonWS[0]['apellidos'] = 'Rodriguez'
         estudiantesJsonWS[1]['correo'] = 'joelerll@gmail.com'
         let cantidadLlamado = 0
         let cantidadLlamadoCorreo = 0
         const db = {
-          cambiarApellidosEstudiante({ nuevo, estudianteIdentificador }){
+          cambiarApellidosEstudiante({ nuevo, correo, matricula }){
             expect(nuevo).to.not.be.undefined
-            expect(estudianteIdentificador).to.not.be.undefined
+            expect(correo).to.not.be.undefined
+            expect(matricula).to.not.be.undefined
             cantidadLlamado++
             return Promise.resolve(true)
           },
-          cambiarCorreoEstudiante({ nuevo, estudianteIdentificador }){
+          cambiarCorreoEstudiante({ nuevo, correo, matricula }){
             expect(nuevo).to.not.be.undefined
-            expect(estudianteIdentificador).to.not.be.undefined
+            expect(correo).to.not.be.undefined
+            expect(matricula).to.not.be.undefined
             cantidadLlamadoCorreo++
             return Promise.resolve(true)
           }
@@ -484,6 +493,44 @@ describe('PPL WEB SERVICE', () =>  {
           done()
         })
       })
+    })
+    describe('@t7.5 INTEGRACION', () =>  {
+      // inicializar() {
+      //   co(function* () {
+      //     // const estudiantesJson = yield wsPPL.generarJsonEstudiantesTodos({ termino: TERMINO_ACTUAL, anio: ANIO_ACTUAL })
+      //     // const profesoresJson = yield wsPPL.generarJsonProfesoresTodos({ termino: TERMINO_ACTUAL, anio: ANIO_ACTUAL })
+      //     // const paralelosJson = wsPPL.anadirTerminoYAnio({ termino: TERMINO_ACTUAL, anio: ANIO_ACTUAL, json: wsPPL.generarJsonParalelosTodos({ estudiantesJson }) })
+      //     const estudiantesJson = dump.estudiantesJson()[1]
+      //     const profesoresJson = dump.profesoresJson()()()[1]
+      //     const paralelosJson = wsPPL.anadirTerminoYAnio({ termino: TERMINO_ACTUAL, anio: ANIO_ACTUAL, json: dump.paralelos[0] })
+      //     const estaGuardadoParalelo = yield wsPPL.guardarParalelos({ paralelosJson })
+      //     const estaGuardadoProfesor = yield wsPPL.guardarProfesores({ profesoresJson })
+      //     const estaGuardadoEstudiante = yield wsPPL.guardarEstudiantes({ estudiantesJson })
+      //     if (estaGuardadoParalelo && estaGuardadoProfesor && estaGuardadoEstudiante)
+      //       console.log('Fueron creados existosamente')
+      //   }).catch((err) => {
+      //     console.log(err)
+      //   })
+      // },
+      // actualizar() {
+      //   co(function* () {
+      //     const estudiantesWS = dump.estudiantesJson()[1]
+      //     const estudiantesDB = yield db.obtenerTodosEstudiantes()
+      //     let estudiantesWSLimpiados = estudiantesWS.map(function(estudiante) {
+      //       return (({ nombres, apellidos, matricula, correo, paralelo, codigoMateria }) => ({ nombres, apellidos, matricula, correo, paralelo, codigoMateria }))(estudiante)
+      //     }, [])
+      //     let estudiantesDBLimpiados = estudiantesDB.map(function(estudiante) {
+      //       return (({ nombres, apellidos, matricula, correo, paralelo, codigoMateria }) => ({ nombres, apellidos, matricula, correo, paralelo, codigoMateria }))(estudiante)
+      //     }, [])
+      //     // console.log(estudiantesWSLimpiados)
+      //     const actualizado = yield wsPPL.actualizarEstudiantes({ estudiantesWS: estudiantesWSLimpiados, estudiantesDB: estudiantesDBLimpiados })
+      //     if (actualizado) {
+      //       console.log('fue actualizado')
+      //     } else {
+      //       console.log('no hubo cambios')
+      //     }
+      //   })
+      // }
     })
   })
 

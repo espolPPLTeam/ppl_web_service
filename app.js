@@ -39,7 +39,7 @@ module.exports = ({ soap, cheerio, co, fs, path, config, db, _, jsondiffpatch, l
           }
           resolve(estudiantesTodos)
         }).catch((err) => {
-          logger.error('generarJsonEstudiantesTodos', err)
+          logger.error(`generarJsonEstudiantesTodos: ${JSON.stringify(err, null, 2)}`)
           reject(err)
         })
       })
@@ -196,12 +196,12 @@ module.exports = ({ soap, cheerio, co, fs, path, config, db, _, jsondiffpatch, l
             let { codigoMateria, nombreMateria, paralelo, termino, anio } = paralelosJson[i]
             let estado = yield db.crearParalelo({ codigoMateria, nombreMateria, paralelo, termino, anio })
             if (!estado) {
-              logger.error('guardarParalelos', paralelosJson[i])
+              logger.error(`guardarParalelos: ${JSON.stringify(paralelosJson[i], null, 2)}`)
             }
           }
           resolve(true)
         }).catch((err) => {
-          logger.error('guardarParalelos', err)
+          logger.error(`guardarParalelos: ${JSON.stringify(err, null, 2)}`)
           reject(err)
         })
       })
@@ -223,18 +223,19 @@ module.exports = ({ soap, cheerio, co, fs, path, config, db, _, jsondiffpatch, l
             let { nombres, apellidos, correo, tipo, paralelo, codigoMateria } = profesor
             let fueCreado = yield db.crearProfesor({ nombres, apellidos, correo, tipo, paralelo, codigoMateria })
             if (!fueCreado) {
-              logger.error('guardarProfesores', profesor)
+              logger.error(`guardarProfesores: ${JSON.stringify(profesor, null, 2)}`)
             }
           }
           resolve(true)
         }).catch((err) => {
-          logger.error('guardarProfesores', err)
+          logger.error(`guardarProfesores: ${JSON.stringify(err, null, 2)}`)
           reject(err)
         })
       })
     },
     /**
-      * @Promise @t7.2
+      * @testing @t7.2
+      * @Promise
       * Guarda en la base de datos
       * @param { array } estudiantesJson - estudiantes segun el esquema json.schema.js
       * @returns { boolean } - true
@@ -249,12 +250,12 @@ module.exports = ({ soap, cheerio, co, fs, path, config, db, _, jsondiffpatch, l
             let { nombres, apellidos, correo, matricula, paralelo, codigoMateria } = estudiante
             let estado = yield db.crearEstudiante({ nombres, apellidos, correo, matricula, paralelo, codigoMateria })
             if (!estado) {
-              logger.error('guardarEstudiantes', estudiante)
+              logger.error(`guardarEstudiantes: ${JSON.stringify(estudiante, null, 2)}`)
             }
           }
           resolve(true)
         }).catch((err) => {
-          logger.error('guardarEstudiantes', err)
+          logger.error(`guardarEstudiantes: ${JSON.stringify(err, null, 2)}`)
           reject(err)
         })
       })
@@ -262,6 +263,7 @@ module.exports = ({ soap, cheerio, co, fs, path, config, db, _, jsondiffpatch, l
 
     // actualizaciones
     /**
+      * @testing @t7.4
       * @Promise
       * @param { array } estudiantesWS - estudiantes leidos de la webService
       * @param { array } estudiantesDB - estudiantes leidos de la db
@@ -295,16 +297,16 @@ module.exports = ({ soap, cheerio, co, fs, path, config, db, _, jsondiffpatch, l
                 yield self.actualizarEstudiantesEditados({ diferencias, estudiantesEditados })
             }
             if (hayEstudiantesEliminados) {
-              logger.info('estudiantes eliminados', estudiantesEliminadosDB)
+              logger.info(`estudiantes eliminados: ${JSON.stringify(estudiantesEliminadosDB, null, 2)}`)
               yield self.actualizarEstudiantesRetirados({ estudiantesEliminadosDB })
             }
             if (hayEstudiantesNuevos) {
-              logger.info('estudiantes nuevos', estudiantesNuevosWS)
+              logger.info(`estudiantes nuevo: ${JSON.stringify(estudiantesNuevosWS, null, 2)}`)
               yield self.actualizarEstudiantesAnadidos({ estudiantesNuevosWS })
             }
             resolve(true)
           }).catch((err) => {
-            logger.error('actualizarEstudiantes',err)
+            logger.error(`actualizarEstudiantes: ${JSON.stringify(err, null, 2)}`)
             reject(err)
           })
         } else {
@@ -313,6 +315,7 @@ module.exports = ({ soap, cheerio, co, fs, path, config, db, _, jsondiffpatch, l
       })
     },
     /**
+      * @testing @t7.4.2
       * @Promise
       * @param { array } estudiantesEliminadosDB
       * @returns { }
@@ -324,20 +327,23 @@ module.exports = ({ soap, cheerio, co, fs, path, config, db, _, jsondiffpatch, l
           let cantidadEstudiantesEliminados = estudiantesEliminadosDB.length
           for (let i = 0; i < cantidadEstudiantesEliminados; i++) {
             let estudiante = estudiantesEliminadosDB[i]
-            let estudianteIdentificador = estudiante['matricula']
-            let fueHecho = yield db.eliminarEstudiante({ estudianteIdentificador })
+            let correo = estudiante['correo']
+            let matricula = estudiante['matricula']
+            let { paralelo, codigoMateria } = estudiante
+            let fueHecho = yield db.eliminarEstudiante({ paralelo, codigoMateria, correo, matricula })
             if (!fueHecho) {
-              logger.error('actualizarEstudiantesRetirados',estudiante)
+              logger.error(`actualizarEstudiantesRetirados: ${JSON.stringify(estudiante, null, 2)}`)
             }
           }
           resolve(true)
         }).catch((err) => {
-          logger.error('actualizarEstudiantesRetirados',err)
+          logger.error(`actualizarEstudiantesRetirados: ${JSON.stringify(err, null, 2)}`)
           reject(err)
         })
       })
     },
     /**
+      * @testing @t7.4.3
       * @Promise
       * @param { array } estudiantesNuevosWS
       * @returns { }
@@ -349,21 +355,22 @@ module.exports = ({ soap, cheerio, co, fs, path, config, db, _, jsondiffpatch, l
           let cantidadEstudiantesNuevos = estudiantesNuevosWS.length
           for (let i = 0; i < cantidadEstudiantesNuevos; i++) {
             let estudiante = estudiantesNuevosWS[i]
-            let estudianteIdentificador = estudiante['matricula']
+            let estudianteIdentificador = estudiante['correo']
             let { nombres, apellidos, correo, matricula, paralelo, codigoMateria } = estudiante
             let fueCreado = yield db.crearEstudiante({ nombres, apellidos, correo, matricula, paralelo,  codigoMateria })
             if (!fueCreado) {
-              logger.error('actualizarEstudiantesAnadidos',estudiante)
+              logger.error(`actualizarEstudiantesAnadidos: ${JSON.stringify(estudiante, null, 2)}`)
             }
           }
           resolve(true)
         }).catch((err) => {
-          logger.error('actualizarEstudiantesAnadidos',err)
+          logger.error(`actualizarEstudiantesAnadidos: ${JSON.stringify(err, null, 2)}`)
           reject(err)
         })
       })
     },
     /**
+      * @testing @t7.4.7
       * @Promise
       * @param { json } diferencias - ver la libreria jsondiffpatch para major detalle
       * @param { array } estudiantesEditados
@@ -411,37 +418,37 @@ module.exports = ({ soap, cheerio, co, fs, path, config, db, _, jsondiffpatch, l
           }
         }
         if (estudiantesCambiadoParalelo.length)
-          logger.info('estudiantes cambiado paralelo',estudiantesCambiadoParalelo)
+          logger.info('estudiantes cambiado paralelo: ' + JSON.stringify(estudiantesCambiadoParalelo, null, 2))
         if (estudiantesCambiadoCorreo.length)
-          logger.info('estudiantes cambiado correo', estudiantesCambiadoCorreo)
+          logger.info('estudiantes cambiado correo: '+ JSON.stringify(estudiantesCambiadoCorreo, null, 2))
         if (estudiantesCambiadosNombres.length)
-          logger.info('estudiantes cambiado nombres',estudiantesCambiadosNombres)
+          logger.info('estudiantes cambiado nombres: ' + JSON.stringify(estudiantesCambiadosNombres, null, 2))
         if (estudiantesCambiadosApellidos.length)
-          logger.info('estudiantes cambiado apellidos', estudiantesCambiadosApellidos)
+          logger.info('estudiantes cambiado apellidos: ' + JSON.stringify(estudiantesCambiadosApellidos, null, 2))
         co(function* () {
-          yield self.actualizarEstudiantesCambios({ 
+          yield self.actualizarEstudiantesCambios({
             estudiantesDatos: estudiantesCambiadoParalelo,
-            nombreMetodoDb: 'cambiarEstudianteParalelo',
+            nombreMetodoDb: 'cambiarEstudianteParalelo', // @t7.4.1
             nombreDatoNuevo: 'paraleloNuevo'
           })
-          yield self.actualizarEstudiantesCambios({ 
+          yield self.actualizarEstudiantesCambios({
             estudiantesDatos: estudiantesCambiadoCorreo,
-            nombreMetodoDb: 'cambiarCorreoEstudiante',
+            nombreMetodoDb: 'cambiarCorreoEstudiante', // @t7.4.4
             nombreDatoNuevo: 'correoNuevo'
           })
-          yield self.actualizarEstudiantesCambios({ 
+          yield self.actualizarEstudiantesCambios({
             estudiantesDatos: estudiantesCambiadosNombres,
-            nombreMetodoDb: 'cambiarNombresEstudiante',
+            nombreMetodoDb: 'cambiarNombresEstudiante', // @t7.4.5
             nombreDatoNuevo: 'nombresNuevo'
           })
-          yield self.actualizarEstudiantesCambios({ 
+          yield self.actualizarEstudiantesCambios({
             estudiantesDatos: estudiantesCambiadosApellidos,
-            nombreMetodoDb: 'cambiarApellidosEstudiante',
+            nombreMetodoDb: 'cambiarApellidosEstudiante', // @t7.4.6
             nombreDatoNuevo: 'apellidosNuevo'
           })
           resolve(true)
         }).catch((err) => {
-          logger.error('actualizarEstudiantesEditados',err)
+          logger.error(`actualizarEstudiantesEditados: ${JSON.stringify(err, null, 2)}`)
           reject(err)
         })
       })
@@ -460,16 +467,17 @@ module.exports = ({ soap, cheerio, co, fs, path, config, db, _, jsondiffpatch, l
           let cantidadEstudiantes = estudiantesDatos.length
           for (let i = 0; i < cantidadEstudiantes; i++) {
             let estudiante = estudiantesDatos[i]
-            let estudianteIdentificador = estudiante['matricula']
+            let correo = estudiante['correo']
+            let matricula = estudiante['matricula']
             let nuevoDato = estudiante[nombreDatoNuevo]
-            let seCambio = yield db[nombreMetodoDb]({ nuevo: nuevoDato, estudianteIdentificador })
+            let seCambio = yield db[nombreMetodoDb]({ nuevo: nuevoDato, correo, matricula })
             if (!seCambio) {
-              logger.error(nombreMetodoDb, estudiante)
+              logger.error(`${nombreMetodoDb}: ${JSON.stringify(estudiante, null, 2)}`)
             }
           }
           resolve(true)
         }).catch((err) => {
-          logger.error(nombreMetodoDb, err)
+          logger.error(`${nombreMetodoDb}: ${JSON.stringify(err, null, 2)}`)
           reject(err)
         })
       })

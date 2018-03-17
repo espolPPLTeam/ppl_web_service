@@ -1,6 +1,7 @@
 const mongo = require('./mongo/db')
 const schema = require('./mongo/schema')
 const WSPPL = require('./index.js')
+const co = require('co')
 const profesoresBase = require('./dump').profesoresJsonBase // tomara prioridad lo que esta en este archivo y se reemplazar si es necesario de lo que obtenga de la web
 
 const dbMock = {
@@ -8,16 +9,34 @@ const dbMock = {
     return new Promise(function(resolve) {
       let estudiante = new schema.Estudiante({ correo, matricula, nombres, apellidos })
       Promise.all([
-        schema.Paralelo.anadirEstudiante({ paralelo: { curso: paralelo, codigo: codigoMateria }, estudianteCorreo: correo }),
+        schema.Paralelo.anadirEstudiante({ paralelo: { curso: paralelo, codigo: codigoMateria }, estudianteMatricula: matricula }),
         estudiante.crear()
       ]).then((values) => {
-        console.log(values[0])
-        resolve(true)
+        resolve(values[0])
       }).catch((err) => {
         console.error(err)
         reject(err)
       })
     })
+	},
+	obtenerTodosEstudiantes() {
+		return new Promise(function(resolve) {
+			co(function* () {
+				let estudiantesTodos = []
+				const estudiantes = yield schema.Estudiante.obtenerTodos()
+				for (var i = 0; i < estudiantes.length; i++) {
+					let paralelo = yield schema.Paralelo.obtenerParaleloEstudiante({ estudianteMatricula: estudiantes[i]['matricula'] })
+					let estudiante = JSON.parse(JSON.stringify(estudiantes[i]))
+					estudiante['paralelo'] = paralelo['curso']
+					estudiante['codigoMateria'] = paralelo['codigo']
+					estudiantesTodos.push(estudiante)
+				}
+				resolve(estudiantesTodos)
+			}).catch((err) => {
+        console.error(err)
+        reject(err)
+      })
+		})
 	},
 	crearProfesor({ nombres, apellidos, correo, tipo, paralelo, codigoMateria }) {
     let profesor = new schema.Profesor({ correo, tipo, nombres, apellidos })
@@ -44,11 +63,99 @@ const dbMock = {
         reject(err)
       })
     })
+	},
+	eliminarEstudiante({ paralelo, codigoMateria, correo, matricula }) {
+		return new Promise(function(resolve) {
+        Promise.all([
+          schema.Estudiante.eliminar({ matricula }),
+          schema.Paralelo.eliminarEstudiante({ paralelo: { curso: paralelo, codigo: codigoMateria }, estudianteMatricula: matricula })
+          ]).then((resp) => {
+            resolve(true)
+        }).catch((err) => {
+					console.error(err)
+	        reject(err)
+        })
+      })
+	},
+	cambiarEstudianteParalelo({ nuevo, correo, matricula }) {
+		return new Promise((resolve, reject) => {
+			co(function* () {
+				let paralelo = yield schema.Paralelo.obtenerParaleloEstudiante({ estudianteMatricula: matricula })
+				let cursoAntiguo = paralelo['curso']
+				let codigoAntiguo = paralelo['codigo']
+				let fueEliminado = yield schema.Paralelo.eliminarEstudiante({ paralelo: { curso: cursoAntiguo, codigo: codigoAntiguo }, estudianteMatricula: matricula })
+				let estudiante = yield schema.Paralelo.anadirEstudiante({ paralelo: { curso: nuevo, codigo: codigoAntiguo }, estudianteMatricula: matricula })
+				if (fueEliminado && estudiante) {
+					resolve(true)
+				} else {
+					resolve(false)
+				}
+			}).catch((err) => {
+				console.error(err)
+				reject(err)
+			})
+    })
+	},
+	cambiarCorreoEstudiante({ nuevo, correo, matricula }) {
+		return new Promise((resolve, reject) => {
+			schema.Estudiante.actualizarCorreo({ matricula, correoNuevo: nuevo }).then((estado) => {
+				if (estado) {
+					resolve(true)
+				} else {
+					resolve(false)
+				}
+			}).catch((err) => {
+				console.error(err)
+				reject(err)
+			})
+    })
+	},
+	cambiarNombresEstudiante({ nuevo, correo, matricula }) {
+		return new Promise((resolve, reject) => {
+			schema.Estudiante.actualizarNombres({ matricula, nombresNuevo: nuevo }).then((estado) => {
+				if (estado) {
+					resolve(true)
+				} else {
+					resolve(false)
+				}
+			}).catch((err) => {
+				console.error(err)
+				reject(err)
+			})
+    })
+	},
+	cambiarApellidosEstudiante({ nuevo, correo, matricula }) {
+		return new Promise((resolve, reject) => {
+			schema.Estudiante.actualizarApellidos({ matricula, apellidosNuevo: nuevo }).then((estado) => {
+				if (estado) {
+					resolve(true)
+				} else {
+					resolve(false)
+				}
+			}).catch((err) => {
+				console.error(err)
+				reject(err)
+			})
+    })
+	},
+	estaLleno() {
+		return new Promise((resolve, reject) => {
+			schema.Paralelo.obtenerTodos().then((estado) => {
+				if (estado.length !== 0) {
+					resolve(true)
+				} else {
+					resolve(false)
+				}
+			}).catch((err) => {
+				console.error(err)
+				reject(err)
+			})
+		})
 	}
 }
 
-const wsPPL = WSPPL({ db: dbMock, anio: '2017', termino: '2s', profesoresBase })
+const wsPPL = WSPPL({ db: dbMock, anio: '2017', termino: '1s', profesoresBase, local: true, cron: '00 * * * * *' })
 mongo.Conectar(process.env.MONGO_URL).then((res) => {
-  // mongo.Limpiar()
-	wsPPL.inicializar()
+	 wsPPL.inicializar()
+	 wsPPL.actualizar()
 })

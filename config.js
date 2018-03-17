@@ -49,11 +49,5 @@ module.exports = {
     }
     return ''
   },
-  anioActual: `${moment().year()}`,
-  Cron: {
-    inicio: 'en la fecha inicio de semestre',
-    fin: 'un mes y medio desppues inicio semestre',
-    horaCorrer: '',
-    intervalo: 'por dia en la noche, hace un backup automatico de la base de datos. Ademas de verificar errores y corregirlos'
-  }
+  anioActual: `${moment().year()}`
 }

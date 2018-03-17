@@ -24,12 +24,12 @@ const ParaleloSchema = mongoose.Schema({
   estudiantes: [{
     type: String,
     ref: 'Estudiante',
-    field: 'correo'
+    field: 'matricula'
   }],
   profesores: [{
     type: String,
     ref: 'Profesor',
-    field: 'correo'
+    field: 'matricula'
   }],
 },{timestamps: false, versionKey: false, collection: 'paralelos'})
 
@@ -59,19 +59,72 @@ ProfesorSchema.methods = {
 }
 
 EstudianteSchema.statics = {
-
+  obtenerTodos() {
+    const self = this
+    return new Promise(function(resolve) {
+      resolve(self.find({}))
+    })
+  },
+  eliminar({ matricula }) {
+    const self = this
+    return new Promise(function(resolve) {
+      self.findOneAndRemove({ matricula }).then((accionEstado) => {
+        if (accionEstado) {
+          resolve(true)
+        } else {
+          resolve(false)
+        }
+      })
+    })
+  },
+  actualizarCorreo({ matricula, correoNuevo }) {
+    const self = this
+    return new Promise(function(resolve) {
+      self.update({ matricula }, {$set: { correo: correoNuevo }}).then((accionEstado) => {
+        resolve(accionEstado.nModified ? true : false)
+      })
+    })
+  },
+  actualizarNombres({ matricula, nombresNuevo }) {
+    const self = this
+    return new Promise(function(resolve) {
+      self.update({ matricula }, {$set: { nombres: nombresNuevo }}).then((accionEstado) => {
+        resolve(accionEstado.nModified ? true : false)
+      })
+    })
+  },
+  actualizarApellidos({ matricula, apellidosNuevo }) {
+    const self = this
+    return new Promise(function(resolve) {
+      self.update({ matricula }, {$set: { apellidos: apellidosNuevo }}).then((accionEstado) => {
+        resolve(accionEstado.nModified ? true : false)
+      })
+    })
+  }
 }
 
 ProfesorSchema.statics = {
-
+  eliminarEstudiante({ paralelo: { curso, codigo }, estudianteMatricula }) {
+    const self = this
+    return new Promise(function(resolve) {
+      self.update({$and: [{ codigo }, { curso }]}, {$pull: {'estudiantes': estudianteMatricula }}).then((accionEstado) => {
+        resolve(accionEstado.nModified ? true : false)
+      })
+    })
+  }
 }
 
 ParaleloSchema.statics = {
-  anadirEstudiante({ paralelo: { curso, codigo }, estudianteCorreo }) {
+  obtenerTodos() {
     const self = this
     return new Promise(function(resolve) {
-      self.update({$and: [{ codigo }, { curso }]}, {$addToSet: {'estudiantes': estudianteCorreo }}).then((accionEstado) => {
-        console.log(accionEstado)
+      resolve(self.find({}))
+    })
+  },
+  anadirEstudiante({ paralelo: { curso, codigo }, estudianteMatricula }) {
+    const self = this
+    return new Promise(function(resolve) {
+      self.update({$and: [{ codigo }, { curso }]}, {$addToSet: {'estudiantes': estudianteMatricula }}).then((accionEstado) => {
         resolve(accionEstado.nModified ? true : false)
       })
     })
@@ -82,6 +135,20 @@ ParaleloSchema.statics = {
       self.update({$and: [{ codigo }, { curso }]}, {$addToSet: {'profesores': profesorCorreo }}).then((accionEstado) => {
         resolve(accionEstado.nModified ? true : false)
       })
+    })
+  },
+  eliminarEstudiante({ paralelo: { curso, codigo }, estudianteMatricula }) {
+    const self = this
+    return new Promise(function(resolve) {
+      self.update({$and: [{ codigo }, { curso }]}, {$pull: {'estudiantes': estudianteMatricula }}).then((accionEstado) => {
+        resolve(accionEstado.nModified ? true : false)
+      })
+    })
+  },
+  obtenerParaleloEstudiante({ estudianteMatricula }) {
+    const self = this
+    return new Promise(function(resolve) {
+      resolve(self.findOne({ estudiantes: estudianteMatricula }))
     })
   }
 }
