@@ -9,6 +9,7 @@ var CronJob = require('cron').CronJob
 const WSPPL = require('./app')
 const config = require('./config')
 const dump = require('./dump')
+
 // const ajv = new Ajv({$data: true})
 const jsondiffpatch = require('jsondiffpatch').create({
   arrays: {
@@ -17,7 +18,7 @@ const jsondiffpatch = require('jsondiffpatch').create({
   }
 })
 
-module.exports = ({ db, anio, termino, profesoresBase, cron, local }) => {
+module.exports = ({ db, anio, termino, cron, local }) => {
   if (config.termino.primer !== termino && config.termino.segundo !== termino ) {
     console.error('El termino debe ser 1s o 2s')
     process.exit(1)

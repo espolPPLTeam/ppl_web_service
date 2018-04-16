@@ -495,6 +495,60 @@ describe('PPL WEB SERVICE', () =>  {
       })
     })
     describe('@t7.5 INTEGRACION', () =>  {
+			before(function(done) {
+				co(function *() {
+		      yield db.Conectar()
+		      yield db.Limpiar()
+		      done()
+		    }).catch((err) => {
+		      console.log('no se puedo conectar')
+		      console.error(err)
+		      exit(1)
+		    })
+		  })
+		  after(function(done) {
+				db.Desconectar().then(() => { done() })
+		  })
+		  beforeEach(function(done) {
+				db.Limpiar().then(() => { done() })
+		  })
+			describe('@t7.5.1 INICIALIZAR', () =>  {
+				it('@t7.5.1.1 paralelos creados', (done) => {
+
+				})
+				it('@t7.5.1.2 estudiantes creados', (done) => {
+
+				})
+				it('@t7.5.1.3 profesores creados', (done) => {
+
+				})
+				it('@t7.5.1.4 estudiantes anadidos a paralelo', (done) => {
+
+				})
+				it('@t7.5.1.5 profesores anadidos a paralelo', (done) => {
+
+				})
+			})
+			describe('@t7.5.2 ACTUALIZAR', () =>  {
+				it('@t7.5.2.1 estudiante retirado', (done) => {
+
+				})
+				it('@t7.5.2.1 estudiante anadido', (done) => {
+
+				})
+				it('@t7.5.2.1 estudiante cambiado paralelo', (done) => {
+
+				})
+				it('@t7.5.2.1 estudiante cambiado correo', (done) => {
+
+				})
+				it('@t7.5.2.1 estudiante cambiado nombres', (done) => {
+
+				})
+				it('@t7.5.2.1 estudiante cambiado apellidos', (done) => {
+
+				})
+			})
       // inicializar() {
       //   co(function* () {
       //     // const estudiantesJson = yield wsPPL.generarJsonEstudiantesTodos({ termino: TERMINO_ACTUAL, anio: ANIO_ACTUAL })

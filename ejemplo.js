@@ -2,7 +2,6 @@ const mongo = require('./mongo/db')
 const schema = require('./mongo/schema')
 const WSPPL = require('./index.js')
 const co = require('co')
-const profesoresBase = require('./dump').profesoresJsonBase // tomara prioridad lo que esta en este archivo y se reemplazar si es necesario de lo que obtenga de la web
 
 const dbMock = {
 	crearEstudiante({ nombres, apellidos, correo, matricula, paralelo,  codigoMateria }) { // null si no se creo o lo que sea?
@@ -151,10 +150,28 @@ const dbMock = {
 				reject(err)
 			})
 		})
+	},
+	obtenerEstudiante({ correo, matricula}) {
+
+	},
+	obtenerProfesor({ correo, matricula}) {
+
+	},
+	obtenerParalelo({ codigoMateria, nombreMateria, paralelo, termino, anio }) {
+
+	},
+	Conectar() {
+
+	},
+	Limpiar() {
+
+	},
+	Desconectar() {
+		
 	}
 }
 
-const wsPPL = WSPPL({ db: dbMock, anio: '2017', termino: '1s', profesoresBase, local: true, cron: '00 * * * * *' })
+const wsPPL = WSPPL({ db: dbMock, anio: '2017', termino: '1s', local: true, cron: '00 * * * * *' })
 mongo.Conectar(process.env.MONGO_URL).then((res) => {
 	 wsPPL.inicializar()
 	 wsPPL.actualizar()
