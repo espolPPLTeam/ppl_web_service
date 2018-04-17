@@ -1,12 +1,8 @@
-const soap = require('soap')
-const cheerio = require('cheerio')
 const path = require('path')
 const fs = require('fs')
 const sinon = require('sinon')
 const chai    = require('chai')
 const expect = require('chai').expect
-const co = require('co')
-const _ = require('lodash')
 const jsonfile = require('jsonfile')
 const chaiXml = require('chai-xml')
 const Ajv = require('ajv')
@@ -58,16 +54,16 @@ const dbMock = {
     }
 }
 
-const wsPPL = WSPPL({ soap, cheerio, fs,  path, co, _, config, db: dbMock, jsondiffpatch, logger })
+const wsPPL = WSPPL({ config, db: dbMock, logger })
 
 describe('PPL WEB SERVICE', () =>  {
   beforeEach(function(done) {
     this.sinon.stub(logger, 'error')
     this.sinon.stub(logger, 'info')
-    // this.sinon.stub(dbMock, 'crearParalelo')
     done()
   })
 
+  // OBTENER LOS RAW DE LA WEB SERVICE, es necesario el uso de internet
   it('@t1 OBTENER RAW ESTUDIANTES', (done) => {
   	let argumentosEstudiantes = {
   		anio: config.anioDesde,
@@ -80,7 +76,7 @@ describe('PPL WEB SERVICE', () =>  {
       expect(resp).xml.to.be.valid()
       done()
     })
-  }).timeout(20000)
+  })
 
   it('@t2 OBTENER RAW PROFESOR', (done) => {
   	let argumentosProfesores = {
@@ -95,9 +91,9 @@ describe('PPL WEB SERVICE', () =>  {
       expect(resp).xml.to.be.valid()
       done()
     })
-  }).timeout(20000)
+  })
 
-  describe('@t3 GENERAR JSON ESTUDIANTE', () =>  {
+  describe('@t3 CONVERTIR XML A JSON LOS ESTUDIANTES', () =>  {
   	it('@t3.1 OK', (done) => {
   	  const estudiantesDump = dump.estudiantesWSDL.raw
   	  const cantidadEstudiantesDump = dump.estudiantesWSDL.cantidad
@@ -106,7 +102,7 @@ describe('PPL WEB SERVICE', () =>  {
       expect(estudiantes).to.be.an('array')
       expect(ajv.validate(schema.estudiantes, estudiantes)).to.equal(true)
       done()
-  	}).timeout(20000)
+  	})
   	it('@t3.2 VACIO', (done) => {
   	  const estudiantesDump = dump.estudiantesWSDL.vacio
   	  const vacio = 0
@@ -114,29 +110,29 @@ describe('PPL WEB SERVICE', () =>  {
       expect(estudiantes).to.have.lengthOf(vacio)
       expect(estudiantes).to.be.an('array')
       done()
-  	}).timeout(20000)
+  	})
   })
 
-  describe('@t4 GENERAR JSON PROFESOR', () =>  {
+  describe('@t4 CONVERTIR XML A JSON LOS PROFESORES', () =>  {
   	it('@t4.1 OK TITULAR', (done) => {
   	  const profesorDump = dump.profesorTitularWSDL.raw
       const profesor = wsPPL.generarJsonProfesor({ raw: profesorDump, tipo: 'titular' })
       expect(ajv.validate(schema.profesor, profesor)).to.equal(true)
       done()
-  	}).timeout(20000)
+  	})
   	it('@t4.2 OK PEER', (done) => {
   	  const profesorDump = dump.profesorTitularWSDL.raw
       const profesor = wsPPL.generarJsonProfesor({ raw: profesorDump, tipo: 'peer' })
       expect(ajv.validate(schema.profesor, profesor)).to.equal(true)
       done()
-  	}).timeout(20000)
+  	})
   	it('@t4.3 VACIO', (done) => {
   	  const profesorDump = dump.profesorTitularWSDL.vacio
       const profesor = wsPPL.generarJsonProfesor({ raw: profesorDump })
       expect(profesor).to.be.an('object')
       expect(profesor).to.be.empty
       done()
-  	}).timeout(20000)
+  	})
   })
 
   // describe('@t5 LEER TODOS DE WS Y GENERAR JSON', () =>  {
@@ -148,7 +144,7 @@ describe('PPL WEB SERVICE', () =>  {
   // 	})
   // })
 
-  describe('@t6 GENERAR PARALELOS JSON', () =>  {
+  describe('@t6 CONVERTIR XML A JSON LOS PARALELOS', () =>  {
     it('@t6.1 OK', (done) => {
       const estudiantesJson = dump.estudiantesJson()[0]
       let paralelos = wsPPL.generarJsonParalelosTodos({ estudiantesJson })
@@ -170,7 +166,7 @@ describe('PPL WEB SERVICE', () =>  {
   	  it('@t7.1.1 OK', (done) => {
         let cantidadLlamado = 0
         const db = {
-          crearParalelo({ codigoMateria, nombreMateria, paralelo, termino, anio }) {
+          crearParalelo ({ codigoMateria, nombreMateria, paralelo, termino, anio }) {
             expect(codigoMateria).to.not.be.undefined
             expect(nombreMateria).to.not.be.undefined
             expect(termino).to.not.be.undefined
@@ -179,7 +175,7 @@ describe('PPL WEB SERVICE', () =>  {
             return Promise.resolve(true)
           }
         }
-        const wsPPL = WSPPL({ soap, cheerio, fs,  path, co, _, config, db, jsondiffpatch, logger })
+        const wsPPL = WSPPL({ config, db, logger })
   	  	wsPPL.guardarParalelos({ paralelosJson }).then((estado) => {
           expect(cantidadLlamado).to.equal(10)
           expect(logger.error.notCalled).to.be.true
@@ -193,7 +189,7 @@ describe('PPL WEB SERVICE', () =>  {
             return Promise.reject(errorMensaje)
           }
         }
-        const wsPPL = WSPPL({ soap, cheerio, fs,  path, co, _, config, db, jsondiffpatch, logger })
+        const wsPPL = WSPPL({ config, db, logger })
         wsPPL.guardarParalelos({ paralelosJson }).catch((err) => {
           expect(err).to.equal(errorMensaje)
           expect(logger.error.calledOnce).to.be.true
@@ -204,18 +200,19 @@ describe('PPL WEB SERVICE', () =>  {
         let errorMensaje = 'Mi error'
         let contador = 0
         const db = {
-          crearParalelo(){
+          crearParalelo () {
             contador++
             return contador === 5 ? Promise.resolve(false) : Promise.resolve(true)
           }
         }
-        const wsPPL = WSPPL({ soap, cheerio, fs,  path, co, _, config, db, jsondiffpatch, logger })
+        const wsPPL = WSPPL({ config, db, logger })
         wsPPL.guardarParalelos({ paralelosJson }).then((estado) => {
           expect(logger.error.calledOnce).to.be.true
   	      done()
   	  	}).catch((err) => console.log(err))
       })
   	})
+
   	describe('@t7.2 ESTUDIANTES', () =>  {
       let estudiantesJson = dump.estudiantesJson()[0]
       let cantidadEstudiantes = estudiantesJson.length
@@ -233,7 +230,7 @@ describe('PPL WEB SERVICE', () =>  {
             return Promise.resolve(true)
           }
         }
-        const wsPPL = WSPPL({ soap, cheerio, fs,  path, co, _, config, db, jsondiffpatch, logger })
+        const wsPPL = WSPPL({ config, db, logger })
         wsPPL.guardarEstudiantes({ estudiantesJson }).then((estado) => {
           expect(cantidadLlamado).to.equal(cantidadLlamado)
           expect(logger.error.notCalled).to.be.true
@@ -247,7 +244,7 @@ describe('PPL WEB SERVICE', () =>  {
             return Promise.reject(errorMensaje)
           }
         }
-        const wsPPL = WSPPL({ soap, cheerio, fs,  path, co, _, config, db, jsondiffpatch, logger })
+        const wsPPL = WSPPL({ config, db, logger })
         wsPPL.guardarEstudiantes({ estudiantesJson }).catch((err) => {
           expect(err).to.equal(errorMensaje)
           expect(logger.error.calledOnce).to.be.true
@@ -263,7 +260,7 @@ describe('PPL WEB SERVICE', () =>  {
             return contador === 5 ? Promise.resolve(false) : Promise.resolve(true)
           }
         }
-        const wsPPL = WSPPL({ soap, cheerio, fs,  path, co, _, config, db, jsondiffpatch, logger })
+        const wsPPL = WSPPL({ config, db, logger })
         wsPPL.guardarEstudiantes({ estudiantesJson }).then((estado) => {
           expect(logger.error.calledOnce).to.be.true
           done()
@@ -286,7 +283,7 @@ describe('PPL WEB SERVICE', () =>  {
             return Promise.resolve(true)
           }
         }
-        const wsPPL = WSPPL({ soap, cheerio, fs,  path, co, _, config, db, jsondiffpatch, logger })
+        const wsPPL = WSPPL({ config, db, logger })
         wsPPL.guardarProfesores({ profesoresJson }).then((estado) => {
           expect(cantidadLlamado).to.equal(16)
           expect(logger.error.notCalled).to.be.true
@@ -300,7 +297,7 @@ describe('PPL WEB SERVICE', () =>  {
             return Promise.reject(errorMensaje)
           }
         }
-        const wsPPL = WSPPL({ soap, cheerio, fs,  path, co, _, config, db, jsondiffpatch, logger })
+        const wsPPL = WSPPL({ config, db, logger })
         wsPPL.guardarProfesores({ profesoresJson }).catch((err) => {
           expect(err).to.equal(errorMensaje)
           expect(logger.error.calledOnce).to.be.true
@@ -316,7 +313,7 @@ describe('PPL WEB SERVICE', () =>  {
             return contador === 5 ? Promise.resolve(false) : Promise.resolve(true)
           }
         }
-        const wsPPL = WSPPL({ soap, cheerio, fs,  path, co, _, config, db, jsondiffpatch, logger })
+        const wsPPL = WSPPL({ config, db, logger })
         wsPPL.guardarProfesores({ profesoresJson }).then((estado) => {
           expect(logger.error.calledOnce).to.be.true
           done()
@@ -339,7 +336,7 @@ describe('PPL WEB SERVICE', () =>  {
             return Promise.resolve(true)
           }
         }
-        const wsPPL = WSPPL({ soap, cheerio, fs,  path, co, _, config, db, jsondiffpatch, logger })
+        const wsPPL = WSPPL({ config, db, logger })
         wsPPL.actualizarEstudiantes({ estudiantesWS: estudiantesJsonWS, estudiantesDB: estudiantesJsonDB }).then((resp) => {
           expect(resp).to.be.true
           expect(cantidadLlamado).to.equal(2)
@@ -362,7 +359,7 @@ describe('PPL WEB SERVICE', () =>  {
             return Promise.resolve(true)
           }
         }
-        const wsPPL = WSPPL({ soap, cheerio, fs,  path, co, _, config, db, jsondiffpatch, logger })
+        const wsPPL = WSPPL({ config, db, logger })
         wsPPL.actualizarEstudiantes({ estudiantesWS: estudiantesJsonWS, estudiantesDB: estudiantesJsonDB }).then((resp) => {
           expect(resp).to.be.true
           expect(cantidadLlamado).to.equal(1)
@@ -387,7 +384,7 @@ describe('PPL WEB SERVICE', () =>  {
             return Promise.resolve(true)
           }
         }
-        const wsPPL = WSPPL({ soap, cheerio, fs,  path, co, _, config, db, jsondiffpatch, logger })
+        const wsPPL = WSPPL({ config, db, logger })
         wsPPL.actualizarEstudiantes({ estudiantesWS: estudiantesJsonWS, estudiantesDB: estudiantesJsonDB }).then((resp) => {
           expect(resp).to.be.true
           expect(cantidadLlamado).to.equal(1)
@@ -409,7 +406,7 @@ describe('PPL WEB SERVICE', () =>  {
             return Promise.resolve(true)
           }
         }
-        const wsPPL = WSPPL({ soap, cheerio, fs,  path, co, _, config, db, jsondiffpatch, logger })
+        const wsPPL = WSPPL({ config, db, logger })
         wsPPL.actualizarEstudiantes({ estudiantesWS: estudiantesJsonWS, estudiantesDB: estudiantesJsonDB }).then((resp) => {
           expect(resp).to.be.true
           expect(cantidadLlamado).to.equal(1)
@@ -431,7 +428,7 @@ describe('PPL WEB SERVICE', () =>  {
             return Promise.resolve(true)
           }
         }
-        const wsPPL = WSPPL({ soap, cheerio, fs,  path, co, _, config, db, jsondiffpatch, logger })
+        const wsPPL = WSPPL({ config, db, logger })
         wsPPL.actualizarEstudiantes({ estudiantesWS: estudiantesJsonWS, estudiantesDB: estudiantesJsonDB }).then((resp) => {
           expect(resp).to.be.true
           expect(cantidadLlamado).to.equal(1)
@@ -453,7 +450,7 @@ describe('PPL WEB SERVICE', () =>  {
             return Promise.resolve(true)
           }
         }
-        const wsPPL = WSPPL({ soap, cheerio, fs,  path, co, _, config, db, jsondiffpatch, logger })
+        const wsPPL = WSPPL({ config, db, logger })
         wsPPL.actualizarEstudiantes({ estudiantesWS: estudiantesJsonWS, estudiantesDB: estudiantesJsonDB }).then((resp) => {
           expect(resp).to.be.true
           expect(cantidadLlamado).to.equal(1)
@@ -484,7 +481,7 @@ describe('PPL WEB SERVICE', () =>  {
             return Promise.resolve(true)
           }
         }
-        const wsPPL = WSPPL({ soap, cheerio, fs,  path, co, _, config, db, jsondiffpatch, logger })
+        const wsPPL = WSPPL({ config, db, logger })
         wsPPL.actualizarEstudiantes({ estudiantesWS: estudiantesJsonWS, estudiantesDB: estudiantesJsonDB }).then((resp) => {
           expect(resp).to.be.true
           expect(cantidadLlamado).to.equal(1)
@@ -494,97 +491,57 @@ describe('PPL WEB SERVICE', () =>  {
         })
       })
     })
+
     describe('@t7.5 INTEGRACION', () =>  {
-			before(function(done) {
-				co(function *() {
-		      yield db.Conectar()
-		      yield db.Limpiar()
-		      done()
-		    }).catch((err) => {
-		      console.log('no se puedo conectar')
-		      console.error(err)
-		      exit(1)
-		    })
+    	const db = require('./mongo/db')
+			before(async () => {
+				await db.Conectar(`mongodb://localhost/webServiceTest`)
+		    await db.Limpiar()
 		  })
-		  after(function(done) {
-				db.Desconectar().then(() => { done() })
+		  after(() => {
+				db.Desconectar()
 		  })
-		  beforeEach(function(done) {
-				db.Limpiar().then(() => { done() })
+		  beforeEach(async () => {
+				await db.Limpiar()
 		  })
 			describe('@t7.5.1 INICIALIZAR', () =>  {
 				it('@t7.5.1.1 paralelos creados', (done) => {
-
+					
+					done()
 				})
-				it('@t7.5.1.2 estudiantes creados', (done) => {
+				// it('@t7.5.1.2 estudiantes creados', (done) => {
 
-				})
-				it('@t7.5.1.3 profesores creados', (done) => {
+				// })
+				// it('@t7.5.1.3 profesores creados', (done) => {
 
-				})
-				it('@t7.5.1.4 estudiantes anadidos a paralelo', (done) => {
+				// })
+				// it('@t7.5.1.4 estudiantes anadidos a paralelo', (done) => {
 
-				})
-				it('@t7.5.1.5 profesores anadidos a paralelo', (done) => {
+				// })
+				// it('@t7.5.1.5 profesores anadidos a paralelo', (done) => {
 
-				})
+				// })
 			})
-			describe('@t7.5.2 ACTUALIZAR', () =>  {
-				it('@t7.5.2.1 estudiante retirado', (done) => {
+			// describe('@t7.5.2 ACTUALIZAR', () =>  {
+			// 	it('@t7.5.2.1 estudiante retirado', (done) => {
 
-				})
-				it('@t7.5.2.1 estudiante anadido', (done) => {
+			// 	})
+			// 	it('@t7.5.2.1 estudiante anadido', (done) => {
 
-				})
-				it('@t7.5.2.1 estudiante cambiado paralelo', (done) => {
+			// 	})
+			// 	it('@t7.5.2.1 estudiante cambiado paralelo', (done) => {
 
-				})
-				it('@t7.5.2.1 estudiante cambiado correo', (done) => {
+			// 	})
+			// 	it('@t7.5.2.1 estudiante cambiado correo', (done) => {
 
-				})
-				it('@t7.5.2.1 estudiante cambiado nombres', (done) => {
+			// 	})
+			// 	it('@t7.5.2.1 estudiante cambiado nombres', (done) => {
 
-				})
-				it('@t7.5.2.1 estudiante cambiado apellidos', (done) => {
+			// 	})
+			// 	it('@t7.5.2.1 estudiante cambiado apellidos', (done) => {
 
-				})
-			})
-      // inicializar() {
-      //   co(function* () {
-      //     // const estudiantesJson = yield wsPPL.generarJsonEstudiantesTodos({ termino: TERMINO_ACTUAL, anio: ANIO_ACTUAL })
-      //     // const profesoresJson = yield wsPPL.generarJsonProfesoresTodos({ termino: TERMINO_ACTUAL, anio: ANIO_ACTUAL })
-      //     // const paralelosJson = wsPPL.anadirTerminoYAnio({ termino: TERMINO_ACTUAL, anio: ANIO_ACTUAL, json: wsPPL.generarJsonParalelosTodos({ estudiantesJson }) })
-      //     const estudiantesJson = dump.estudiantesJson()[1]
-      //     const profesoresJson = dump.profesoresJson()()()[1]
-      //     const paralelosJson = wsPPL.anadirTerminoYAnio({ termino: TERMINO_ACTUAL, anio: ANIO_ACTUAL, json: dump.paralelos[0] })
-      //     const estaGuardadoParalelo = yield wsPPL.guardarParalelos({ paralelosJson })
-      //     const estaGuardadoProfesor = yield wsPPL.guardarProfesores({ profesoresJson })
-      //     const estaGuardadoEstudiante = yield wsPPL.guardarEstudiantes({ estudiantesJson })
-      //     if (estaGuardadoParalelo && estaGuardadoProfesor && estaGuardadoEstudiante)
-      //       console.log('Fueron creados existosamente')
-      //   }).catch((err) => {
-      //     console.log(err)
-      //   })
-      // },
-      // actualizar() {
-      //   co(function* () {
-      //     const estudiantesWS = dump.estudiantesJson()[1]
-      //     const estudiantesDB = yield db.obtenerTodosEstudiantes()
-      //     let estudiantesWSLimpiados = estudiantesWS.map(function(estudiante) {
-      //       return (({ nombres, apellidos, matricula, correo, paralelo, codigoMateria }) => ({ nombres, apellidos, matricula, correo, paralelo, codigoMateria }))(estudiante)
-      //     }, [])
-      //     let estudiantesDBLimpiados = estudiantesDB.map(function(estudiante) {
-      //       return (({ nombres, apellidos, matricula, correo, paralelo, codigoMateria }) => ({ nombres, apellidos, matricula, correo, paralelo, codigoMateria }))(estudiante)
-      //     }, [])
-      //     // console.log(estudiantesWSLimpiados)
-      //     const actualizado = yield wsPPL.actualizarEstudiantes({ estudiantesWS: estudiantesWSLimpiados, estudiantesDB: estudiantesDBLimpiados })
-      //     if (actualizado) {
-      //       console.log('fue actualizado')
-      //     } else {
-      //       console.log('no hubo cambios')
-      //     }
-      //   })
-      // }
+			// 	})
+			// })
     })
   })
 

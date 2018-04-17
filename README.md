@@ -18,6 +18,80 @@ Permite syncronizar los datos de la web service de ppl con cualquier base de dat
 
 ## Development
 
+__Folder Structure__
+
+* index.js .- Archivo donde se llama a las funciones creadas
+
+* app.js .- Declaracion de la funciones
+
+* config.js .- Muestra todas las variables constantes
+
+* ejemplo.js .- Lo que el nombre dice
+
+* json.schema.js .- Declaracion de las respuestas
+
+* logger.js
+
+* prueba.js .- archivo para probar las librerias nuevas que se instalen 
+
+__Uso de la libreria__
+
+```js
+const wsPPL = WSPPL({ 
+  db, // instalcion de la db. Cada metodo tien que devolver una promesa
+  anio: '2017', // 2017 2018
+  termino: '1s', // 1s o 2s
+  local: true, // para usar un json en local en vez de la web service
+  cron: '00 * * * * *' // https://github.com/kelektiv/node-cron
+})
+
+db.Conectar(URL_DATABASE).then((res) => {
+   wsPPL.inicializar()
+   wsPPL.actualizar()
+})
+```
+
+
+__Declaración de la db__
+
+```js
+  const db = {
+    crearEstudiante({ nombres, apellidos, correo, matricula, paralelo,  codigoMateria }) {
+      return new Promise((resolve, reject) => {
+        resolve(true) // false
+        reject(err) // si no ocurrio algo inesperado
+      })
+    },
+    obtenerTodosEstudiantes() {
+      resolve() // todos los estudiantes registrados el semestre actual
+    },
+    crearProfesor({ nombres, apellidos, correo, tipo, paralelo, codigoMateria }) {
+      resolve(true) // false
+    },
+    crearParalelo({ codigoMateria, nombreMateria, paralelo, termino, anio }) {
+      resolve(true) // false
+    },
+    eliminarEstudiante({ paralelo, codigoMateria, correo, matricula }) {
+      resolve(true) // false
+    },
+    cambiarEstudianteParalelo({ nuevo, correo, matricula }) {
+      resolve(true) // false
+    },
+    cambiarCorreoEstudiante({ nuevo, correo, matricula }) {
+      resolve(true) // false
+    },
+    cambiarNombresEstudiante({ nuevo, correo, matricula }) {
+      resolve(true) // false
+    },
+    cambiarApellidosEstudiante({ nuevo, correo, matricula }) {
+      resolve(true) // false
+    },
+    estaLleno() {
+      resolve(true) // false
+    }
+  }
+```
+
 Estudiantes
 
 ```js

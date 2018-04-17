@@ -1,9 +1,17 @@
-module.exports = ({ soap, cheerio, co, fs, path, config, db, _, jsondiffpatch, logger }) => {
+const soap = require('soap')
+const cheerio = require('cheerio')
+const co = require('co')
+const fs = require('fs')
+const path = require('path')
+const jsondiffpatch = require('jsondiffpatch')
+const _ = require('lodash')
+module.exports = ({ config, db, logger }) => {
   const URL = config.url
   const MATERIAS = Object.keys(config.materiaCodigo).map((k) => config.materiaCodigo[k])
   const proto = {
     /**
       * @promise
+      * @testeado @t3
       * Devuelve todos los estudiantes de todos los paralelos.
       * @param {string} termino - puede ser 1s o 2s
       * @param {string} anio
@@ -46,6 +54,7 @@ module.exports = ({ soap, cheerio, co, fs, path, config, db, _, jsondiffpatch, l
     },
     /**
       * @promise
+      * @testeado @t4
       * Devuelve todos los profesores de todos los paralelos.
       * @param {string} termino - puede ser 1s o 2s
       * @param {string} anio

@@ -1,36 +1,16 @@
-const soap = require('soap')
-const cheerio = require('cheerio')
-const path = require('path')
-const fs = require('fs')
 const co = require('co')
-const _ = require('lodash')
 const logger = require('./logger')
 var CronJob = require('cron').CronJob
 const WSPPL = require('./app')
 const config = require('./config')
 const dump = require('./dump')
 
-// const ajv = new Ajv({$data: true})
-const jsondiffpatch = require('jsondiffpatch').create({
-  arrays: {
-    detectMove: true,
-    includeValueOnMove: true
-  }
-})
-
 module.exports = ({ db, anio, termino, cron, local }) => {
   if (config.termino.primer !== termino && config.termino.segundo !== termino ) {
     console.error('El termino debe ser 1s o 2s')
     process.exit(1)
   }
-  // expect(ajv.validate(schema.PROFESOR_DATOS, res.body.datos)).to.equal(true)
-  // verificar que profesoresBase sea valido
-  // verificar que db tenga las propiedades basicas y que retornen todos promises
-    // let possiblePromise = f1();
-    // let isPromise = possiblePromise instanceof Promise;
-    // var possiblePromise = f1();
-    // var certainPromise = Promise.resolve(possiblePromise).then(...);
-  const wsPPL = WSPPL({ soap, cheerio, fs,  path, co, _, config, db, jsondiffpatch, logger })
+  const wsPPL = WSPPL({ config, db, logger })
   const TERMINO_ACTUAL = termino || config.terminoActual()
   const ANIO_ACTUAL = anio || config.anioActual
   const proto = {
