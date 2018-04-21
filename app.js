@@ -285,8 +285,8 @@ module.exports = ({ config, db, logger }) => {
     actualizarEstudiantes({ estudiantesWS, estudiantesDB }) {
       const self = this
       return new Promise((resolve, reject) => {
-        const estudiantesWSOrdenados = _.sortBy(estudiantesWS, ['nombres'])
-        const estudiantesDBOrdenados = _.sortBy(estudiantesDB, ['nombres'])
+        const estudiantesWSOrdenados = _.sortBy(estudiantesWS, ['nombres', 'apellidos'])
+        const estudiantesDBOrdenados = _.sortBy(estudiantesDB, ['nombres', 'apellidos'])
         const hayDiferencias = jsondiffpatch.diff(estudiantesDBOrdenados, estudiantesWSOrdenados)
         if (hayDiferencias) {
           const estudiantesEliminados = _.differenceWith(estudiantesDB, estudiantesWS, _.isEqual)

@@ -74,7 +74,7 @@ module.exports = {
         })
       })
 	},
-	cambiarEstudianteParalelo({ nuevo, correo, matricula }) {
+	cambiarEstudianteParalelo({ nuevo, correo, matricula }) { // FIX: enviar tambien al codigo y curso anterior
 		return new Promise((resolve, reject) => {
 			co(function* () {
 				let paralelo = yield schema.Paralelo.obtenerParaleloEstudiante({ estudianteMatricula: matricula })
