@@ -95,6 +95,11 @@ module.exports = {
 	},
 	cambiarCorreoEstudiante({ nuevo, correo, matricula }) {
 		return new Promise((resolve, reject) => {
+			// eliminar el correo viejo de los paralelos que estuvo y anadirlo a estos nuevos
+			// buscar el estudiante con la matricula
+			// cambiar el correo
+			// eliminar el viejo correo del paralelo
+			// anadiir el nuevo correo al paralelo
 			schema.Estudiante.actualizarCorreo({ matricula, correoNuevo: nuevo }).then((estado) => {
 				if (estado) {
 					resolve(true)
@@ -151,17 +156,36 @@ module.exports = {
 	},
 
 	// Para revisar concordancia de la db
-	obtenerEstudiante({ correo, matricula}) {
-
+	obtenerTodosEstudiantes() {
+		return new Promise((resolve, reject) => {
+			schema.Estudiante.obtenerTodos().then((estudiantes) => {
+				// { nombres, apellidos, matricula, correo, paralelo, codigoMateria }
+				resolve(estudiantes)
+			}).catch((err) => {
+				console.error(err)
+				reject(err)
+			})
+		})
 	},
-	obtenerProfesor({ correo, matricula}) {
-
+	obtenerTodosProfesores() {
+		return new Promise((resolve, reject) => {
+			schema.Profesor.obtenerTodos().then((profesores) => {
+				resolve(profesores)
+			}).catch((err) => {
+				console.error(err)
+				reject(err)
+			})
+		})
 	},
-	obtenerParalelo({ codigoMateria, nombreMateria, paralelo, termino, anio }) {
-
-	},
-	obtenerTodosParalelos({}) {
-
+	obtenerTodosParalelos() {
+		return new Promise((resolve, reject) => {
+			schema.Paralelo.obtenerTodos().then((paralelos) => {
+				resolve(paralelos)
+			}).catch((err) => {
+				console.error(err)
+				reject(err)
+			})
+		})
 	},
 	Conectar() {
 

@@ -1,9 +1,10 @@
 const mongo = require('./mongo/db')
 const WSPPL = require('./index.js')
 const db = require('./dbMock')
-
-const wsPPL = WSPPL({ db, anio: '2017', termino: '1s', local: true, cron: '00 * * * * *' })
+const dump = require('./dump')
+const wsPPL = WSPPL({ db, anio: '2017', termino: '1s', local: true, cron: '00 * * * * *', dump })
 mongo.Conectar(`mongodb://localhost/testPPL`).then((res) => {
-	 wsPPL.inicializar()
-	 wsPPL.actualizar()
+	 wsPPL.inicializar().then((resp) => {
+	 	wsPPL.actualizar()
+	 })
 })

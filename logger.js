@@ -7,8 +7,8 @@ const myFormat = printf(info => {
 let transportsFiles = []
 if (process.env.NODE_ENV !== 'testing' && process.env.NODE_ENV !== 'development') {
     transportsFiles = [
-    new winston.transports.File({ filename: 'error.log', level: 'error'}),
-    new winston.transports.File({ filename: 'debug.log', level: 'info'})
+    new winston.transports.File({ filename: 'error.ws.log', level: 'error'}),
+    new winston.transports.File({ filename: 'debug.ws.log', level: 'info'})
     ]
 }
 
@@ -19,7 +19,7 @@ const logger = winston.createLogger({
   ),
   transports: transportsFiles,
   exceptionHandlers: [
-    new transports.File({ filename: 'exceptions.log' })
+    new transports.File({ filename: 'exceptions.ws.log' })
   ]
 });
 

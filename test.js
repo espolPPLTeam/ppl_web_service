@@ -6,6 +6,7 @@ const expect = require('chai').expect
 const jsonfile = require('jsonfile')
 const chaiXml = require('chai-xml')
 const Ajv = require('ajv')
+const validator = require('validator')
 require('mocha-sinon')
 const logger = require('tracer').console()
 const ajv = new Ajv({$data: true})
@@ -493,55 +494,81 @@ describe('PPL WEB SERVICE', () =>  {
     })
 
     describe('@t7.5 INTEGRACION', () =>  {
-    	const db = require('./mongo/db')
+    	db = require('./mongo/db')
+    	const WSPPL = require('./index.js')
 			before(async () => {
 				await db.Conectar(`mongodb://localhost/webServiceTest`)
-		    await db.Limpiar()
+		    // await db.Limpiar() // desactivar
 		  })
 		  after(() => {
 				db.Desconectar()
 		  })
-		  beforeEach(async () => {
-				await db.Limpiar()
-		  })
 			describe('@t7.5.1 INICIALIZAR', () =>  {
+				before(async () => {
+					dbMongo = require('./dbMock')
+					ws = WSPPL({ db: dbMongo, anio: '2017', termino: '1s', local: true, cron: '00 * * * * *', dump })
+					// await ws.inicializar() // desactivar
+		  	})
 				it('@t7.5.1.1 paralelos creados', (done) => {
-					
+					dbMongo.obtenerTodosParalelos().then((paralelos) => {
+						expect(paralelos.length).to.equal(10)
+						expect(ajv.validate(schema.paralelosDB, paralelos)).to.equal(true)
+						done()
+					})
+				})
+				it('@t7.5.1.2 estudiantes creados', (done) => {
+					dbMongo.obtenerTodosEstudiantes().then((estudiantes) => {
+						expect(estudiantes.length).to.equal(886)
+      			expect(ajv.validate(schema.estudiantesDB, estudiantes)).to.equal(true)
+						done()
+					})
+				})
+				it('@t7.5.1.3 profesores creados', (done) => {
+					dbMongo.obtenerTodosProfesores().then((profesores) => {
+						expect(profesores.length).to.equal(10)
+      			expect(ajv.validate(schema.profesoresDB, profesores)).to.equal(true)
+						done()
+					})
+				})
+				it('@t7.5.1.4 estudiantes anadidos a paralelo', async () => {
+					let estudiantes = await dbMongo.obtenerTodosEstudiantes()
+					let paralelos = await dbMongo.obtenerTodosParalelos()
+					for (paralelo of paralelos) {
+						for (matricula of paralelo.estudiantes) {
+							let existe = estudiantes.find((est) => {
+								return est.matricula == matricula  // < == cambiar por correo si es necesario
+							})
+							expect(existe).to.be.an('object')
+						}
+					}
+				})
+				it('@t7.5.1.5 profesores anadidos a paralelo', (done) => {
 					done()
 				})
-				// it('@t7.5.1.2 estudiantes creados', (done) => {
+				it('@t7.5.1.6 un paralelo por estudiante', (done) => {
+					done()
+				})
+			})
+			describe('@t7.5.2 ACTUALIZAR', () =>  {
+				it('@t7.5.2.1 estudiante retirado', (done) => {
+
+				})
+				// it('@t7.5.2.1 estudiante anadido', (done) => {
 
 				// })
-				// it('@t7.5.1.3 profesores creados', (done) => {
+				// it('@t7.5.2.1 estudiante cambiado paralelo', (done) => {
 
 				// })
-				// it('@t7.5.1.4 estudiantes anadidos a paralelo', (done) => {
+				// it('@t7.5.2.1 estudiante cambiado correo', (done) => {
 
 				// })
-				// it('@t7.5.1.5 profesores anadidos a paralelo', (done) => {
+				// it('@t7.5.2.1 estudiante cambiado nombres', (done) => {
+
+				// })
+				// it('@t7.5.2.1 estudiante cambiado apellidos', (done) => {
 
 				// })
 			})
-			// describe('@t7.5.2 ACTUALIZAR', () =>  {
-			// 	it('@t7.5.2.1 estudiante retirado', (done) => {
-
-			// 	})
-			// 	it('@t7.5.2.1 estudiante anadido', (done) => {
-
-			// 	})
-			// 	it('@t7.5.2.1 estudiante cambiado paralelo', (done) => {
-
-			// 	})
-			// 	it('@t7.5.2.1 estudiante cambiado correo', (done) => {
-
-			// 	})
-			// 	it('@t7.5.2.1 estudiante cambiado nombres', (done) => {
-
-			// 	})
-			// 	it('@t7.5.2.1 estudiante cambiado apellidos', (done) => {
-
-			// 	})
-			// })
     })
   })
 

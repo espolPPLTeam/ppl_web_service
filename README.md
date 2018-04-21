@@ -14,6 +14,9 @@ Permite syncronizar los datos de la web service de ppl con cualquier base de dat
 
 ## Prerequisites
 
+* Nodejs >= 8.0.0
+* Mongo >= 3.3.0
+
 ## Deployment
 
 ## Development
@@ -51,6 +54,30 @@ db.Conectar(URL_DATABASE).then((res) => {
 })
 ```
 
+__Implementar llamada db__
+
+Estos metodos tienen que ser implementado para poder realizar el test de comprobacion. Debe ser usando la base de datos
+
+```js
+let Conectar = function(url) {
+  resolve(db)
+}
+
+let Desconectar = function() {
+}
+
+let Limpiar = function() {
+  return new Promise(function(resolve) {
+    resolve()
+  })
+}
+
+module.exports = {
+  Conectar,
+  Desconectar,
+  Limpiar
+}
+```
 
 __Declaración de la db__
 
@@ -63,7 +90,7 @@ __Declaración de la db__
       })
     },
     obtenerTodosEstudiantes() {
-      resolve() // todos los estudiantes registrados el semestre actual
+      resolve() // { nombres, apellidos, matricula, correo, paralelo, codigoMateria }
     },
     crearProfesor({ nombres, apellidos, correo, tipo, paralelo, codigoMateria }) {
       resolve(true) // false
@@ -131,6 +158,14 @@ Paralelos
 ```
 
 ## Testing
+
+Para poder comprobar que se implemento correctamente los metodos usar el test con el tag @t7.5.
+Debe crear un archivo donde implemente las funciones que se muestra en el archivo dbMock.js.
+Puede borrar lo que esta alli e implementar sus funciones.
+
+* El archivo json.schema.js se usa para validar que vengan los datos correctos
+* Se buscaran 16 usuarios random para comprobar que todo este correcto
+* En actualizar se borraran unos estudiantes para comprobar que todo este correcto tambien. Luego se reestablecera al estado anterio
 
 ## Authors
 

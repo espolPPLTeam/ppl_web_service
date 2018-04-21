@@ -1,0 +1,29 @@
+[
+	 {
+    "nombres": "EDUARDO EFRAIN",
+    "apellidos": "MONTERO CARPIO",
+    "correo": "emontero@espol.edu.ec",
+    "paralelo": "1",
+    "codigoMateria": "FISG1002",
+    "nombreMateria": "FÍSICA II",
+    "tipo": "titular"
+  },
+  {
+    "nombres": "JOSE GERARDO",
+    "apellidos": "SACARELO MELENDEZ",
+    "correo": "jsacarel@espol.edu.ec",
+    "paralelo": "2",
+    "codigoMateria": "FISG1002",
+    "nombreMateria": "FÍSICA II",
+    "tipo": "titular"
+  },
+  {
+    "nombres": "CARLOS VINICIO",
+    "apellidos": "MORENO MEDINA",
+    "correo": "cmoreno@espol.edu.ec",
+    "paralelo": "4",
+    "codigoMateria": "FISG1002",
+    "nombreMateria": "FÍSICA II",
+    "tipo": "titular"
+  }
+]

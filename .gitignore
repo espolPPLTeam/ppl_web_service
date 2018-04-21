@@ -4,3 +4,5 @@ node_modules
 *.lock
 *-lock.json
 GIST
+dbmock.ppl.js
+dbmock.att.js

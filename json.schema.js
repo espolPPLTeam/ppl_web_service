@@ -48,6 +48,44 @@ let paraleloSinTerminoAnio = {
   }
 }
 
+let estudianteDB = {
+	"minProperties": 4,
+  "additionalProperties": true,
+  "properties": {
+    "nombres": { "type": "string" },
+    "apellidos": { "type": "string" },
+    "correo": { "type": "string", "format": "email" },
+    "matricula": { "type": "string" }
+  }
+}
+
+let paraleloDB = {
+	"minProperties": 4,
+  "additionalProperties": true,
+  "properties": {
+    "estudiantes": { "type": "array" },
+    "profesores": { "type": "array" },
+    "codigo": { "type": "string" },
+    "curso": { "type": "string" },
+    "termino": { "type": "string" },
+    "anoi": { "type": "string" }
+  }
+}
+
+let profesorDB = {
+	"minProperties": 4,
+  "additionalProperties": true,
+  "properties": {
+    "nombres": { "type": "string" },
+    "apellidos": { "type": "string" },
+    "tipo": { 
+    	"type": "string" ,
+      "enum": ["peer", "titular"] 
+    },
+    "matricula": { "type": "string" }
+  }
+}
+
 module.exports = {
   paralelos: {
     "type": "array",
@@ -67,5 +105,17 @@ module.exports = {
   },
   profesor,
   estudiante,
-  paralelo
+  paralelo,
+  estudiantesDB: {
+		"type": "array",
+    "items" : estudianteDB
+	},
+	paralelosDB: {
+		"type": "array",
+    "items" : paraleloDB
+	},
+	profesoresDB: {
+		"type": "array",
+    "items" : profesorDB
+	}
 }

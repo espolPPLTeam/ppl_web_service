@@ -104,6 +104,12 @@ EstudianteSchema.statics = {
 }
 
 ProfesorSchema.statics = {
+	obtenerTodos() {
+    const self = this
+    return new Promise(function(resolve) {
+      resolve(self.find({}))
+    })
+  },
   eliminarEstudiante({ paralelo: { curso, codigo }, estudianteMatricula }) {
     const self = this
     return new Promise(function(resolve) {

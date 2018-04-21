@@ -1,0 +1,137 @@
+[
+	{
+		"nombres": "STEVEN SEBASTIAN",
+		"apellidos": "MACIAS QUEZADA",
+		"matricula": "201121507",
+		"correo": "stsemaci@espol.edu.ec",
+		"paralelo": "1",
+		"codigoMateria": "FISG1002",
+		"nombreMateria": "FÍSICA II"
+	},
+	{
+		"nombres": "JOSELINE YAJAIRA",
+		"apellidos": "PIZA FIGUEROA",
+		"matricula": "201262067",
+		"correo": "joyapiza@espol.edu.ec",
+		"paralelo": "1",
+		"codigoMateria": "FISG1002",
+		"nombreMateria": "FÍSICA II"
+	},
+	{
+		"nombres": "LUIS EFREN",
+		"apellidos": "HERRERA BAÑOS",
+		"matricula": "201310157",
+		"correo": "luefherr@espol.edu.ec",
+		"paralelo": "1",
+		"codigoMateria": "FISG1002",
+		"nombreMateria": "FÍSICA II"
+	},
+	{
+		"nombres": "HENRY DAVID",
+		"apellidos": "PUHUEYESTEWA SARANGO",
+		"matricula": "201311008",
+		"correo": "hpuhueye@espol.edu.ec",
+		"paralelo": "1",
+		"codigoMateria": "FISG1002",
+		"nombreMateria": "FÍSICA II"
+	},
+	{
+		"nombres": "CARLOS ENRIQUE",
+		"apellidos": "MORAN CHONANA",
+		"matricula": "201401099",
+		"correo": "cemoran@espol.edu.ec",
+		"paralelo": "1",
+		"codigoMateria": "FISG1002",
+		"nombreMateria": "FÍSICA II"
+	},
+	{
+		"nombres": "AYRTON MODESTO",
+		"apellidos": "GUEVARA MURILLO",
+		"matricula": "201401265",
+		"correo": "ayrmogue@espol.edu.ec",
+		"paralelo": "1",
+		"codigoMateria": "FISG1002",
+		"nombreMateria": "FÍSICA II"
+	},
+	{
+		"nombres": "ANGEL EDUARDO",
+		"apellidos": "ORTEGA NIETO",
+		"matricula": "201402547",
+		"correo": "aeortega@espol.edu.ec",
+		"paralelo": "1",
+		"codigoMateria": "FISG1002",
+		"nombreMateria": "FÍSICA II"
+	},
+	{
+		"nombres": "SHIRLEY JOHANNA",
+		"apellidos": "CORONADO BLUM",
+		"matricula": "201607967",
+		"correo": "sjcorona@espol.edu.ec",
+		"paralelo": "2",
+		"codigoMateria": "FISG1002",
+		"nombreMateria": "FÍSICA II"
+	},
+	{
+		"nombres": "JUAN FRANCISCO",
+		"apellidos": "NEBEL DUNN",
+		"matricula": "201608106",
+		"correo": "jfnebel@espol.edu.ec",
+		"paralelo": "2",
+		"codigoMateria": "FISG1002",
+		"nombreMateria": "FÍSICA II"
+	},
+	{
+		"nombres": "JUAN RAMON",
+		"apellidos": "JIMENEZ CALERO",
+		"matricula": "201608114",
+		"correo": "jurajime@espol.edu.ec",
+		"paralelo": "2",
+		"codigoMateria": "FISG1002",
+		"nombreMateria": "FÍSICA II"
+	},
+	{
+		"nombres": "MIGUEL ANGEL",
+		"apellidos": "PATIÑO SAN-YENG",
+		"matricula": "201608148",
+		"correo": "mapatino@espol.edu.ec",
+		"paralelo": "2",
+		"codigoMateria": "FISG1002",
+		"nombreMateria": "FÍSICA II"
+	},
+	{
+		"nombres": "ALEXIS XAVIER",
+		"apellidos": "MORA ROCA",
+		"matricula": "201608304",
+		"correo": "axmora@espol.edu.ec",
+		"paralelo": "2",
+		"codigoMateria": "FISG1002",
+		"nombreMateria": "FÍSICA II"
+	},
+	{
+    "nombres": "ALVARO DANIEL",
+    "apellidos": "VILLACIS CALDERON",
+    "matricula": "201606639",
+    "correo": "advillac@espol.edu.ec",
+    "paralelo": "4",
+    "codigoMateria": "FISG1002",
+    "nombreMateria": "FÍSICA II"
+  },
+  {
+    "nombres": "FABIOLA SOFYA",
+    "apellidos": "GUTIERREZ RODRIGUEZ",
+    "matricula": "201606753",
+    "correo": "fabsogut@espol.edu.ec",
+    "paralelo": "4",
+    "codigoMateria": "FISG1002",
+    "nombreMateria": "FÍSICA II"
+  },
+  {
+    "nombres": "JONATHAN ALEXANDER",
+    "apellidos": "MEDINA MONTESDEOCA",
+    "matricula": "201606795",
+    "correo": "jonamedi@espol.edu.ec",
+    "paralelo": "4",
+    "codigoMateria": "FISG1002",
+    "nombreMateria": "FÍSICA II"
+  }
+]
