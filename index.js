@@ -4,13 +4,13 @@ const WSPPL = require('./app')
 const config = require('./config')
 
 module.exports = ({ db, anio, termino, local, dump }) => {
-  if (config.termino.primer !== termino && config.termino.segundo !== termino ) {
+	const TERMINO_ACTUAL = termino || config.terminoActual()
+  const ANIO_ACTUAL = anio || config.anioActual
+  if (config.termino.primer !== TERMINO_ACTUAL && config.termino.segundo !== TERMINO_ACTUAL ) {
     console.error('El termino debe ser 1s o 2s')
     process.exit(1)
   }
   const wsPPL = WSPPL({ config, db, logger })
-  const TERMINO_ACTUAL = termino || config.terminoActual()
-  const ANIO_ACTUAL = anio || config.anioActual
   const proto = {
     async inicializar() {
       let estaLleno = await db.estaLleno()
